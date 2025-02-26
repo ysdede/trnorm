@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Demo script for ordinals normalization.
 This script demonstrates the normalization of Turkish ordinals in various formats.

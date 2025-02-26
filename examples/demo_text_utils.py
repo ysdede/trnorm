@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Demo script for text_utils.py functionality.
 This script demonstrates various Turkish text utilities.
