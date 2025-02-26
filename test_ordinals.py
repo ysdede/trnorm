@@ -61,5 +61,20 @@ class TestOrdinalNormalization(unittest.TestCase):
         for input_text, expected in test_cases.items():
             self.assertEqual(normalize_ordinals(input_text), expected)
 
+    def test_bullet_points(self):
+        """Test bullet points with uppercase first letters are preserved."""
+        test_cases = {
+            "1. Sabah kahvaltısı": "1. Sabah kahvaltısı",
+            "2. Yürüyüş": "2. Yürüyüş",
+            "3. Öğle yemeği": "3. Öğle yemeği",
+            "4. İş toplantısı": "4. İş toplantısı",
+            "1. birinci madde (lowercase b - should be converted)": "birinci birinci madde (lowercase b - should be converted)",
+            "2. İkinci madde (capital İ - should be preserved)": "2. İkinci madde (capital İ - should be preserved)",
+            "3. üçüncü madde (lowercase ü - should be converted)": "üçüncü üçüncü madde (lowercase ü - should be converted)",
+        }
+        
+        for input_text, expected_output in test_cases.items():
+            self.assertEqual(normalize_ordinals(input_text), expected_output)
+
 if __name__ == '__main__':
     unittest.main()

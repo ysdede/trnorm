@@ -1,4 +1,5 @@
 import re
+from text_utils import is_turkish_upper
 
 # Compile regex patterns globally for efficiency
 seq_pattern = re.compile(r'(\b\d+\.,?)\s+(?=\d+\.)')
@@ -6,8 +7,10 @@ seq_pattern = re.compile(r'(\b\d+\.,?)\s+(?=\d+\.)')
 ordinal_pattern = re.compile(r'\b(\d+)(?:\'(?:inci|[iı]nc[iı]|nci|uncu|üncü|inci|nci)|(?:inci|[iı]nc[iı]|nci|uncu|üncü|inci|nci))\b')
 # Pattern for standalone ordinals with period (must be at the start of a line or end of a line or surrounded by spaces)
 standalone_ordinal = re.compile(r'(?:^|\s)(\d+)\.(?:$|\s)')
-# Pattern for ordinals in context
-context_ordinal = re.compile(r'\b(\d+)\. (\w+)')
+# Pattern for ordinals or bullet points in context - capture the first letter of the next word to check casing
+context_ordinal = re.compile(r'(\b\d+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
+# Pattern specifically for bullet points at the beginning of lines
+bullet_point_pattern = re.compile(r'^\s*(\d+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
 
 # Convert numbers to their textual representation in Turkish
 def num_to_text(n):
@@ -74,6 +77,35 @@ def num_to_text(n):
     # Handle larger numbers (simplified approach)
     return special_cases.get(n, f"{n}.")
 
+# Check if a string starts with an uppercase letter (using text_utils)
+def is_uppercase_first(s):
+    """Check if the first letter of a string is uppercase."""
+    if not s:
+        return False
+    
+    # Check if the first character is uppercase using text_utils
+    return is_turkish_upper(s[0])
+
+# Check if a line is a bullet point
+def is_bullet_point(line):
+    """
+    Check if a line is a bullet point.
+    
+    A bullet point typically starts with a number followed by a period and a space,
+    and then a word that starts with an uppercase letter.
+    
+    Args:
+        line: The line to check
+        
+    Returns:
+        True if the line is a bullet point, False otherwise
+    """
+    match = bullet_point_pattern.match(line)
+    if match and is_uppercase_first(match.group(2)):
+        return True
+    
+    return False
+
 # Normalize text with compiled regex patterns
 def normalize_ordinals(text):
     """
@@ -86,8 +118,15 @@ def normalize_ordinals(text):
         Text with normalized ordinals
     """
     def context_repl(m):
-        num, keyword = int(m.group(1)), m.group(2)
-        return f"{num_to_text(num)} {keyword}"
+        num, word = m.group(1), m.group(2)
+        
+        # If the word starts with an uppercase letter, it's likely a bullet point
+        # or the start of a sentence, so keep it as is
+        if is_uppercase_first(word):
+            return f"{num}. {word}"
+        
+        # Convert the number to its ordinal text form
+        return f"{num_to_text(int(num))} {word}"
     
     def seq_repl(m):
         nums = list(map(int, re.findall(r'\d+', m.group(0))))
@@ -104,10 +143,21 @@ def normalize_ordinals(text):
         suffix = ' ' if m.group(0)[-1] == ' ' else ''
         return prefix + num_to_text(num) + suffix
 
-    # Apply transformations in sequence
-    text = re.sub(seq_pattern, seq_repl, text)
-    text = re.sub(context_ordinal, context_repl, text)
-    text = re.sub(standalone_ordinal, standalone_repl, text)
-    text = re.sub(ordinal_pattern, ordinal_repl, text)
+    # Process the text line by line to better handle bullet points
+    lines = text.split('\n')
+    processed_lines = []
     
-    return text
+    for line in lines:
+        # Check if the line is a bullet point (starts with a number and period followed by an uppercase word)
+        if is_bullet_point(line):
+            # If it's a bullet point, keep it as is
+            processed_lines.append(line)
+        else:
+            # Apply transformations in sequence to each line
+            line = re.sub(seq_pattern, seq_repl, line)
+            line = re.sub(context_ordinal, context_repl, line)
+            line = re.sub(standalone_ordinal, standalone_repl, line)
+            line = re.sub(ordinal_pattern, ordinal_repl, line)
+            processed_lines.append(line)
+    
+    return '\n'.join(processed_lines)
