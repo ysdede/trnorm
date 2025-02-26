@@ -11,7 +11,8 @@ from text_utils import (
     sapkasiz,
     kalin_sesliler,
     ince_sesliler,
-    sesli_harfler
+    sesli_harfler,
+    ekle
 )
 
 
@@ -241,6 +242,43 @@ class TestTurkishTextUtils(unittest.TestCase):
         
         # Test with numbers and special characters
         self.assertEqual(sapkasiz("kâğıt123!"), "kağıt123!")
+
+    def test_ekle_ile(self):
+        """Test ekle function with 'ile' suffix."""
+        from test_strings import ile_test_words, istisnalar_test_words
+        
+        # Test regular words with 'ile'
+        for kelime, beklenen in ile_test_words.items():
+            self.assertEqual(ekle(kelime, "ile"), beklenen)
+        
+        # Test exception words with 'ile'
+        for kelime, beklenen in istisnalar_test_words.items():
+            self.assertEqual(ekle(kelime, "ile"), beklenen[0])
+    
+    def test_ekle_ise(self):
+        """Test ekle function with 'ise' suffix."""
+        from test_strings import ise_test_words, istisnalar_test_words
+        
+        # Test regular words with 'ise'
+        for kelime, beklenen in ise_test_words.items():
+            self.assertEqual(ekle(kelime, "ise"), beklenen)
+        
+        # Test exception words with 'ise'
+        for kelime, beklenen in istisnalar_test_words.items():
+            self.assertEqual(ekle(kelime, "ise"), beklenen[1])
+    
+    def test_ekle_invalid(self):
+        """Test ekle function with invalid inputs."""
+        # Test with empty string
+        self.assertEqual(ekle("", "ile"), "")
+        
+        # Test with invalid suffix
+        with self.assertRaises(ValueError):
+            ekle("test", "invalid")
+        
+        # Test with empty suffix
+        with self.assertRaises(ValueError):
+            ekle("test", "")
 
     def test_turkish_case_conversion_roundtrip(self):
         """Test that turkish_lower and turkish_upper work correctly in roundtrip."""

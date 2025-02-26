@@ -84,7 +84,11 @@ def ekle(kelime: str = "", ek: str = ""):
     duz_kucuk_kelime = sapkasiz(turkish_lower(kelime))
 
     if duz_kucuk_kelime in ek_istisnalar_unlu_uyumu.keys():
-        return f"{kelime}{ek_istisnalar_unlu_uyumu[duz_kucuk_kelime][1]}"
+        # Use index 0 for "ile" and index 1 for "ise"
+        if ek == "ile":
+            return f"{kelime}{ek_istisnalar_unlu_uyumu[duz_kucuk_kelime][0]}"
+        else:  # ek == "ise"
+            return f"{kelime}{ek_istisnalar_unlu_uyumu[duz_kucuk_kelime][1]}"
 
     yeni_ek = ""
 
