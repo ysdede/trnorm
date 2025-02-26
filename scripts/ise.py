@@ -14,8 +14,10 @@ Examples:
 - Ali + ise = Aliyse
 """
 
-from text_utils import ekle
-from test_strings import ise_test_words, istisnalar_test_words
+import os
+
+from trnorm.text_utils import ekle
+from trnorm.test_strings import ise_test_words, istisnalar_test_words
 
 
 def ek_uret(kelime):
@@ -39,12 +41,13 @@ if __name__ == "__main__":
         print(f"{kelime:<16} {beklenen:<16} --> {result:<16}")
         assert result == beklenen
 
-    sozluk_tsv = "TDK_Sozluk-Turkish.tsv"
+    sozluk_tsv = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data/TDK_Sozluk-Turkish.tsv")
 
     import csv
 
     with open(sozluk_tsv, "r", encoding="utf-8") as f:
         reader = csv.reader(f, delimiter="\t")
+        next(reader)  # Skip header
         sozluk = list(reader)
         kelimeler = [satir[0].strip() for satir in sozluk]
 
@@ -55,11 +58,15 @@ if __name__ == "__main__":
 
     for kelime in set_kelimeler:
         try:
-            print(f"{kelime:<16} --> {ek_uret(kelime):<16}")
-            ekli_kelimeler.append(ek_uret(kelime))
+            result = ek_uret(kelime)
+            print(f"{kelime:<16} --> {result:<16}")
+            ekli_kelimeler.append(result)
         except Exception as e:
             print(f"{kelime:<16} --> {e}")
             exit(1)
 
-    with open("ise_ekli_kelimeler.txt", "w", encoding="utf-8") as f:
+    output_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), r"data\ise_ekli_kelimeler.txt")
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(ekli_kelimeler))
+
+    print(f"Saved {len(ekli_kelimeler)} words with 'ise' suffix to {output_file}")

@@ -18,8 +18,8 @@ import os
 
 # Add parent directory to path to allow imports from parent directory
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from text_utils import ekle
-from tests.test_strings import iken_test_words
+from trnorm.text_utils import ekle
+from trnorm.test_strings import iken_test_words
 
 
 def ek_uret(kelime):
@@ -43,7 +43,7 @@ if __name__ == "__main__":
         print(f"{kelime:<16} {beklenen:<16} --> {result:<16}")
         assert result == beklenen
 
-    sozluk_tsv = os.path.join(os.path.dirname(os.path.dirname(__file__)), "TDK_Sozluk-Turkish.tsv")
+    sozluk_tsv = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data/TDK_Sozluk-Turkish.tsv")
 
     import csv
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
             print(f"{kelime:<16} --> {e}")
             exit(1)
 
-    output_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "iken_ekli_kelimeler.txt")
+    output_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), r"data\iken_ekli_kelimeler.txt")
     with open(output_file, "w", encoding="utf-8") as f:
         f.write("\n".join(ekli_kelimeler))
     
