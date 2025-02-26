@@ -1,5 +1,6 @@
 import re
 from trnorm.text_utils import is_turkish_upper
+from trnorm.roman_numerals import roman_to_arabic, ROMAN_ORDINAL_PATTERN
 
 # Compile regex patterns globally for efficiency
 seq_pattern = re.compile(r'(\b\d+\.,?)\s+(?=\d+\.)')
@@ -239,6 +240,25 @@ def normalize_ordinals(text):
         # Convert the number to its ordinal text form
         return f"{num_to_text(int(num))} {word}"
     
+    def roman_ordinal_repl(m):
+        roman, word = m.group(1), m.group(2)
+        
+        # Convert Roman numeral to Arabic number
+        try:
+            num = roman_to_arabic(roman)
+            
+            # If the word starts with an uppercase letter, it's likely a proper noun
+            # that follows a Roman numeral (like "II. Dünya Savaşı", "III. Selim")
+            # In this case, we want to convert the Roman numeral to text form
+            if is_uppercase_first(word):
+                return f"{num_to_text(num)} {word}"
+            
+            # Otherwise, convert to ordinal text form
+            return f"{num_to_text(num)} {word}"
+        except ValueError:
+            # If not a valid Roman numeral, return as is
+            return f"{roman}. {word}"
+    
     def seq_repl(m):
         nums = list(map(int, re.findall(r'\d+', m.group(0))))
         return ', '.join(num_to_text(num) for num in nums) + ' '
@@ -266,6 +286,7 @@ def normalize_ordinals(text):
         else:
             # Apply transformations in sequence to each line
             line = re.sub(seq_pattern, seq_repl, line)
+            line = re.sub(ROMAN_ORDINAL_PATTERN, roman_ordinal_repl, line)  # Process Roman ordinals first
             line = re.sub(context_ordinal, context_repl, line)
             line = re.sub(standalone_ordinal, standalone_repl, line)
             line = re.sub(ordinal_pattern, ordinal_repl, line)
