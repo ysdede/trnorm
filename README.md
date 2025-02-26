@@ -1,0 +1,75 @@
+# TRNorm
+
+Turkish text normalization tools for natural language processing.
+
+## Features
+
+- **Number to Text Conversion**: Convert numeric values to their Turkish text representation
+- **Ordinal Number Normalization**: Convert ordinal numbers to their Turkish text representation
+- **Turkish Suffix Handling**: Add Turkish suffixes (ile, ise, iken) to words following vowel harmony rules
+- **Text Utilities**: Various text utility functions for Turkish language processing
+
+## Installation
+
+```bash
+pip install trnorm
+```
+
+## Usage
+
+### Number to Text Conversion
+
+```python
+from trnorm import NumberToTextConverter, convert_numbers_to_words_wrapper
+
+# Convert a single number
+converter = NumberToTextConverter()
+print(converter.convert("42"))  # "kırk iki"
+
+# Convert numbers in a text
+text = "Bugün 25 Nisan 2025 tarihinde 42 kişi katıldı."
+normalized = convert_numbers_to_words_wrapper(text)
+print(normalized)  # "Bugün yirmi beş Nisan iki bin yirmi beş tarihinde kırk iki kişi katıldı."
+```
+
+### Ordinal Number Normalization
+
+```python
+from trnorm import normalize_ordinals
+
+text = "1. sırada 2'nci kişi ve 3'üncü grup"
+normalized = normalize_ordinals(text)
+print(normalized)  # "birinci sırada ikinci kişi ve üçüncü grup"
+```
+
+### Turkish Suffix Handling
+
+```python
+from trnorm import ekle
+
+# Add "ile" suffix (with)
+print(ekle("Ankara", "ile"))  # "Ankarayla"
+print(ekle("İstanbul", "ile"))  # "İstanbulla"
+
+# Add "ise" suffix (if)
+print(ekle("Ankara", "ise"))  # "Ankaraysa"
+print(ekle("İstanbul", "ise"))  # "İstanbulsa"
+
+# Add "iken" suffix (while/when)
+print(ekle("çalışıyor", "iken"))  # "çalışıyorken"
+print(ekle("evde", "iken"))  # "evdeyken"
+```
+
+### Text Utilities
+
+```python
+from trnorm import turkish_lower, turkish_upper, turkish_capitalize
+
+print(turkish_lower("İSTANBUL"))  # "istanbul"
+print(turkish_upper("istanbul"))  # "İSTANBUL"
+print(turkish_capitalize("istanbul"))  # "İstanbul"
+```
+
+## License
+
+Apache License 2.0

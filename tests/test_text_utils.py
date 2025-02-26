@@ -4,7 +4,7 @@ import os
 
 # Add parent directory to path to allow imports from parent directory
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from text_utils import (
+from trnorm.text_utils import (
     turkish_lower,
     turkish_upper,
     turkish_capitalize,
@@ -14,10 +14,18 @@ from text_utils import (
     son_sesli_harf,
     son_sesli_harf_kalin,
     sapkasiz,
-    kalin_sesliler,
-    ince_sesliler,
-    sesli_harfler,
-    ekle
+    ekle,
+)
+from trnorm.test_strings import (
+    TURKISH_ALPHABET_SMALL,
+    TURKISH_ALPHABET_CAPITAL,
+    TURKISH_VOWELS,
+    BACK_VOWELS,
+    FRONT_VOWELS,
+    ile_test_words,
+    ise_test_words,
+    iken_test_words,
+    istisnalar_test_words,
 )
 
 
@@ -25,17 +33,17 @@ class TestTurkishTextUtils(unittest.TestCase):
     def test_constants(self):
         """Test the vowel constants."""
         # Test kalin_sesliler (back vowels)
-        self.assertEqual(kalin_sesliler, "aıouûâ")
+        self.assertEqual(BACK_VOWELS, "aıouûâ")
         
         # Test ince_sesliler (front vowels)
-        self.assertEqual(ince_sesliler, "eiöüîêô")
+        self.assertEqual(FRONT_VOWELS, "eiöüîêô")
         
         # Test sesli_harfler (all vowels)
-        self.assertEqual(sesli_harfler, kalin_sesliler + ince_sesliler)
+        self.assertEqual(TURKISH_VOWELS, BACK_VOWELS + FRONT_VOWELS)
         
         # Verify all vowels are included
         all_vowels = set("aıoueiöüâîûêô")
-        self.assertEqual(set(sesli_harfler), all_vowels)
+        self.assertEqual(set(TURKISH_VOWELS), all_vowels)
 
     def test_turkish_lower(self):
         """Test turkish_lower function with various inputs."""
@@ -250,8 +258,6 @@ class TestTurkishTextUtils(unittest.TestCase):
 
     def test_ekle_ile(self):
         """Test ekle function with 'ile' suffix."""
-        from tests.test_strings import ile_test_words, istisnalar_test_words
-        
         # Test regular words with 'ile'
         for kelime, beklenen in ile_test_words.items():
             self.assertEqual(ekle(kelime, "ile"), beklenen)
@@ -262,8 +268,6 @@ class TestTurkishTextUtils(unittest.TestCase):
 
     def test_ekle_ise(self):
         """Test ekle function with 'ise' suffix."""
-        from tests.test_strings import ise_test_words, istisnalar_test_words
-        
         # Test regular words with 'ise'
         for kelime, beklenen in ise_test_words.items():
             self.assertEqual(ekle(kelime, "ise"), beklenen)
@@ -274,8 +278,6 @@ class TestTurkishTextUtils(unittest.TestCase):
     
     def test_ekle_iken(self):
         """Test ekle function with 'iken' suffix."""
-        from tests.test_strings import iken_test_words
-        
         # Test regular words with 'iken'
         for kelime, beklenen in iken_test_words.items():
             self.assertEqual(ekle(kelime, "iken"), beklenen)

@@ -1,5 +1,10 @@
 import unittest
-from ordinals import normalize_ordinals
+import sys
+import os
+
+# Add parent directory to path to allow imports from parent directory
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from trnorm.ordinals import normalize_ordinals
 
 class TestOrdinalNormalization(unittest.TestCase):
     def test_basic_ordinals(self):

@@ -1,5 +1,11 @@
 import unittest
-from num_to_text import NumberToTextConverter
+
+import sys
+import os
+
+# Add parent directory to path to allow imports from parent directory
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from trnorm.num_to_text import NumberToTextConverter, convert_numbers_to_words_wrapper
 
 class TestTurkishNumberConverter(unittest.TestCase):
     def setUp(self):

@@ -10,7 +10,7 @@ Examples:
 - evde + iken = evdeyken (while at home)
 """
 
-from text_utils import ekle
+from trnorm.text_utils import ekle
 
 # Examples of words with "iken" suffix
 examples = [

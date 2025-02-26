@@ -1,6 +1,34 @@
-.git
-.pytest_cache
-*.pyc
-__pycache__
 *.tsv
 *.txt
+
+# Compiled python modules.
+*.pyc
+
+# Setuptools distribution folder.
+/dist/
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+
+# playground directory for running local debug code
+playground
+
+# poetry .lock file
+poetry.lock
+
+# idea specific folders
+.idea
+.vscode
+
+# virtual environments
+venv
+.venv
+uv.lock
+
+# cache folders
+__pycache__
+.pytest_cache
+.benchmarks
+/docs/site/
+/site/
+
