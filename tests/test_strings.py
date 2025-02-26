@@ -36,6 +36,35 @@ ise_test_words = {
     "x": "x ise",
 }
 
+# Ek-fiilin zarf-fiil eki almış biçimi olan iken ayrı yazılabildiği gibi kelimelere eklenerek de yazılabilir.
+# Eklenerek yazıldığında baştaki i düşer. Eklendiği kelimenin ünlüleri kalın olsa da -ken zarf-fiil ekinin ünlüsü ince kalır:
+# başlayacak-ken (başlayacak iken), çalışıyor-ken (çalışıyor iken), durgun-ken (durgun iken), okur-ken (okur iken),
+# olgun-ken (olgun iken), uyur-ken (uyur iken), yazar-ken (yazar iken); geliyor-ken (geliyor iken), gülmüş-ken (gülmüş iken),
+# öğretmen-ken (öğretmen iken) vb.
+
+# iken, ünlüyle biten kelimelere bitişik olarak yazıldığında araya y ünsüzü girer ve başındaki i ünlüsü düşer:
+# evde-y-ken (evde iken), okulda-y-ken (okulda iken), okumakta-y-ken (okumakta iken), yolda-y-ken (yolda iken) vb.
+iken_test_words = {
+    "başlayacak": "başlayacakken",
+    "çalışıyor": "çalışıyorken",
+    "durgun": "durgunken",
+    "okur": "okurken",
+    "olgun": "olgunken",
+    "uyur": "uyurken",
+    "yazar": "yazarken",
+    "geliyor": "geliyorken",
+    "gülmüş": "gülmüşken",
+    "öğretmen": "öğretmenken",
+    "evde": "evdeyken",
+    "okulda": "okuldayken",
+    "okumakta": "okumaktayken",
+    "yolda": "yoldayken",
+    "Dy": "Dy iken",
+    "S": "S iken",
+    "x": "x iken",
+    "AB": "AB iken",
+}
+
 istisnalar_test_words = {
     "akropol": ("akropolle", "akropolse"),
     "alkol": ("alkolle", "alkolse"),

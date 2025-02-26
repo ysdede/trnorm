@@ -65,9 +65,11 @@ def turkish_capitalize(s):
     return turkish_upper(s[0]) + s[1:]
 
 def ekle(kelime: str = "", ek: str = ""):
-    ekler = ["ile", "ise"]
+    ekler = ["ile", "ise", "iken"]
+
     if len(kelime) == 0:
         return ""
+
     if ek == "" or ek not in ekler:
         raise ValueError(f"Ek {ek} not in {ekler}")
 
@@ -87,6 +89,10 @@ def ekle(kelime: str = "", ek: str = ""):
     if not any(turkish_lower(harf) in sesli_harfler for harf in kelime):
         return f"{kelime} {ek}"
     
+    if ek == "iken":
+        yeni_ek = yeni_ek + "ken"
+        return f"{kelime}{yeni_ek}"
+
     duz_kucuk_kelime = sapkasiz(turkish_lower(kelime))
 
     from istisnalar import ek_istisnalar_unlu_uyumu, suffix_tuple

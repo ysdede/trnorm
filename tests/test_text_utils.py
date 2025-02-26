@@ -272,6 +272,14 @@ class TestTurkishTextUtils(unittest.TestCase):
         for kelime, beklenen in istisnalar_test_words.items():
             self.assertEqual(ekle(kelime, "ise"), beklenen[1])
     
+    def test_ekle_iken(self):
+        """Test ekle function with 'iken' suffix."""
+        from tests.test_strings import iken_test_words
+        
+        # Test regular words with 'iken'
+        for kelime, beklenen in iken_test_words.items():
+            self.assertEqual(ekle(kelime, "iken"), beklenen)
+    
     def test_ekle_invalid(self):
         """Test ekle function with invalid inputs."""
         # Test with empty string
