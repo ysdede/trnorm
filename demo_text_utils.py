@@ -6,7 +6,7 @@ Demo script for text_utils.py functionality.
 This script demonstrates various Turkish text utilities.
 """
 
-from text_utils import (
+from trnorm.text_utils import (
     turkish_lower,
     turkish_upper,
     turkish_capitalize,

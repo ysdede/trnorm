@@ -1,5 +1,5 @@
 import re
-from text_utils import is_turkish_upper
+from trnorm.text_utils import is_turkish_upper
 
 # Compile regex patterns globally for efficiency
 seq_pattern = re.compile(r'(\b\d+\.,?)\s+(?=\d+\.)')

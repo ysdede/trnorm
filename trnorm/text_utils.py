@@ -95,7 +95,7 @@ def ekle(kelime: str = "", ek: str = ""):
 
     duz_kucuk_kelime = sapkasiz(turkish_lower(kelime))
 
-    from istisnalar import ek_istisnalar_unlu_uyumu, suffix_tuple
+    from trnorm.istisnalar import ek_istisnalar_unlu_uyumu, suffix_tuple
 
     if duz_kucuk_kelime in ek_istisnalar_unlu_uyumu.keys():
         # Use index 0 for "ile" and index 1 for "ise"

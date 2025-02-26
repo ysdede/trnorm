@@ -6,7 +6,7 @@ Demo script for ordinals normalization.
 This script demonstrates the normalization of Turkish ordinals in various formats.
 """
 
-from ordinals import normalize_ordinals
+from trnorm.ordinals import normalize_ordinals
 
 
 def main():
