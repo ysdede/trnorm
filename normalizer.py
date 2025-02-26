@@ -104,6 +104,7 @@ class Normalizer:
             List of converted tokens
 
         """
+        input_text = self._convert_dates_to_words(input_text, merge_words)
         input_text = input_text.replace(", ", " |$| ")
         input_text = input_text.replace("-", " ~ ")
         input_text = input_text.replace(":", ": ")  # Ensure space after colon
@@ -490,4 +491,4 @@ if __name__ == "__main__":
     # print(converter.convert_numbers_to_words("yaklaşık 4,5-5 cm'ye kadar"))
     print(converter.convert_numbers_to_words("Binler ayracı ile ayrılmış Türkçe sayılar: 5000000 lira"))
     print(converter.convert_numbers_to_words("3. gün"))
-    # print(converter.convert_numbers_to_words("09 05 2021 günü"))
+    print(converter.convert_numbers_to_words("09.05.2021 günü"))
