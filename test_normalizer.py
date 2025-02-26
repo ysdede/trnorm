@@ -105,5 +105,36 @@ class TestTurkishNumberConverter(unittest.TestCase):
         for text, expected in test_cases.items():
             self.assertEqual(self.converter.convert_numbers_to_words(text), expected)
 
+    def test_dates_to_text(self):
+        """Test dates to text conversion with various date separators (-, /, space, period) in ddmmyyyy format"""
+        test_cases = {
+            # Dates with hyphen separator
+            "01-01-2023": "bir bir iki bin yirmi üç",
+            "15-06-2023": "on beş altı iki bin yirmi üç",
+            "31-12-2023": "otuz bir on iki iki bin yirmi üç",
+            
+            # Dates with slash separator
+            "01/01/2023": "bir bir iki bin yirmi üç",
+            "15/06/2023": "on beş altı iki bin yirmi üç",
+            "31/12/2023": "otuz bir on iki iki bin yirmi üç",
+            
+            # Dates with period separator
+            "01.01.2023": "bir bir iki bin yirmi üç",
+            "15.06.2023": "on beş altı iki bin yirmi üç",
+            "31.12.2023": "otuz bir on iki iki bin yirmi üç",
+            
+            # Dates with two-digit year
+            "01-01-23": "bir bir yirmi üç",
+            "15-06-23": "on beş altı yirmi üç",
+            "31-12-23": "otuz bir on iki yirmi üç",
+            
+            # Dates with single-digit day/month
+            "1-1-2023": "bir bir iki bin yirmi üç",
+            "5-6-2023": "beş altı iki bin yirmi üç",
+            "9-9-2023": "dokuz dokuz iki bin yirmi üç"
+        }
+        for date, expected in test_cases.items():
+            self.assertEqual(self.converter.convert_numbers_to_words(date), expected)
+
 if __name__ == '__main__':
     unittest.main()
