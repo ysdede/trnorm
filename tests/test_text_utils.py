@@ -1,4 +1,9 @@
 import unittest
+import sys
+import os
+
+# Add parent directory to path to allow imports from parent directory
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from text_utils import (
     turkish_lower,
     turkish_upper,
@@ -245,7 +250,7 @@ class TestTurkishTextUtils(unittest.TestCase):
 
     def test_ekle_ile(self):
         """Test ekle function with 'ile' suffix."""
-        from test_strings import ile_test_words, istisnalar_test_words
+        from tests.test_strings import ile_test_words, istisnalar_test_words
         
         # Test regular words with 'ile'
         for kelime, beklenen in ile_test_words.items():
@@ -254,10 +259,10 @@ class TestTurkishTextUtils(unittest.TestCase):
         # Test exception words with 'ile'
         for kelime, beklenen in istisnalar_test_words.items():
             self.assertEqual(ekle(kelime, "ile"), beklenen[0])
-    
+
     def test_ekle_ise(self):
         """Test ekle function with 'ise' suffix."""
-        from test_strings import ise_test_words, istisnalar_test_words
+        from tests.test_strings import ise_test_words, istisnalar_test_words
         
         # Test regular words with 'ise'
         for kelime, beklenen in ise_test_words.items():
