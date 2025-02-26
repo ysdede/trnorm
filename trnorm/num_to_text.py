@@ -122,17 +122,7 @@ class NumberToTextConverter:
         result = result.replace(" ~ ", "-")
         result = result.replace("  ", " ")  # Remove double spaces
         return result.strip()
-
-
-    def _is_token_valid_turkish(self, token):
-        """
-        Checks whether given token is valid according to Turkish.
-        """
-        valid_according_to_stemmer_analyzer = not (
-            self._stemmer_analyzer.candidate_generator.get_analysis_candidates(token)[0][-1] == "Unknown"
-        )
-        valid_according_to_lexicon = token in self._words_lexicon
-        return valid_according_to_stemmer_analyzer or valid_according_to_lexicon
+        
 
     def _int_to_words(self, main_num, put_commas=False, merge_words=False):
         """
