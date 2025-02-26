@@ -53,7 +53,6 @@ def son_sesli_harf(kelime):
         if turkish_lower(harf) in sesli_harfler:
             return turkish_lower(harf)
 
-
 def son_sesli_harf_kalin(kelime):
     return turkish_lower(son_sesli_harf(kelime)) in kalin_sesliler
 
@@ -72,16 +71,25 @@ def ekle(kelime: str = "", ek: str = ""):
     if ek == "" or ek not in ekler:
         raise ValueError(f"Ek {ek} not in {ekler}")
 
-    from istisnalar import ek_istisnalar_unlu_uyumu, suffix_tuple
-
     # Beklenen girdi tek kelime ancak bazı durumlarda birden fazla kelime verilebilir
     kelime = kelime.split(" ")[-1]
 
+    yeni_ek = ""
+
+    if sesli_ile_bitiyor(kelime):
+        yeni_ek = yeni_ek + "y"
+    
+    # Hepsi büyük harf ise ve uzunluğu <= 3 ise ek oluşturulamaz
+    if is_turkish_upper(kelime) and len(kelime) <= 3:
+        return f"{kelime} {ek}"
+
     # Kelimede sesli harf yoksa ek oluşturulamaz, "kelime + \s + ile"
     if not any(turkish_lower(harf) in sesli_harfler for harf in kelime):
-        return f"{kelime} ile"
+        return f"{kelime} {ek}"
     
     duz_kucuk_kelime = sapkasiz(turkish_lower(kelime))
+
+    from istisnalar import ek_istisnalar_unlu_uyumu, suffix_tuple
 
     if duz_kucuk_kelime in ek_istisnalar_unlu_uyumu.keys():
         # Use index 0 for "ile" and index 1 for "ise"
@@ -89,11 +97,6 @@ def ekle(kelime: str = "", ek: str = ""):
             return f"{kelime}{ek_istisnalar_unlu_uyumu[duz_kucuk_kelime][0]}"
         else:  # ek == "ise"
             return f"{kelime}{ek_istisnalar_unlu_uyumu[duz_kucuk_kelime][1]}"
-
-    yeni_ek = ""
-
-    if sesli_ile_bitiyor(kelime):
-        yeni_ek = yeni_ek + "y"
 
     yeni_ek = yeni_ek + ek[1]
 
