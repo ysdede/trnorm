@@ -14,6 +14,10 @@ ile_test_words = {
     "Ali": "Aliyle",
     "Alp": "Alpla",
     "dükkân": "dükkânla",
+    "Dy": "Dy ile",
+    "S": "S ile",
+    "x": "x ile",
+    "AB": "AB ile",
 }
 
 ise_test_words = {
@@ -27,6 +31,9 @@ ise_test_words = {
     "dükkân": "dükkânsa",
     "Alkollü": "Alkollüyse",
     "Kontrol": "Kontrolse",
+    "Z": "Z ise",
+    "BB": "BB ise",
+    "x": "x ise",
 }
 
 istisnalar_test_words = {
