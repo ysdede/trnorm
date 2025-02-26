@@ -76,5 +76,19 @@ class TestOrdinalNormalization(unittest.TestCase):
         for input_text, expected_output in test_cases.items():
             self.assertEqual(normalize_ordinals(input_text), expected_output)
 
+    def test_big_numbers(self):
+        """Test big numbers are converted correctly."""
+        test_cases = {
+            "99. günde": "doksan dokuzuncu günde",
+            "103. sırada": "yüz üçüncü sırada",
+            "2000. saniye": "iki bininci saniye",
+            "19857. aday": "on dokuz bin sekiz yüz elli yedinci aday",
+            "1000000. kişi": "bir milyonuncu kişi",
+            "1000000000. atom": "bir milyarıncı atom",
+        }
+        
+        for input_text, expected_output in test_cases.items():
+            self.assertEqual(normalize_ordinals(input_text), expected_output)
+
 if __name__ == '__main__':
     unittest.main()

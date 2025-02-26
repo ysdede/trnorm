@@ -1,9 +1,9 @@
 import unittest
-from normalizer import Normalizer
+from num_to_text import NumberToTextConverter
 
 class TestTurkishNumberConverter(unittest.TestCase):
     def setUp(self):
-        self.converter = Normalizer()
+        self.converter = NumberToTextConverter()
 
     def test_basic_numbers(self):
         """Test basic numbers from 0-999"""

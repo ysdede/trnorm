@@ -12,6 +12,13 @@ This module provides functionality for normalizing Turkish ordinals in text. It 
   - Attached: "1inci", "2nci", "3üncü"
 - Preserves capitalization of words following bullet points
 - Handles sequences of ordinals: "1., 2. ve 3. sınıflar" → "birinci, ikinci ve üçüncü sınıflar"
+- Supports big numbers (up to billions):
+  - 99. → doksan dokuzuncu
+  - 103. → yüz üçüncü
+  - 2000. → iki bininci
+  - 19857. → on dokuz bin sekiz yüz elli yedinci
+  - 1000000. → bir milyonuncu
+  - 1000000000. → bir milyarıncı
 
 ## Usage
 
@@ -24,6 +31,8 @@ text = """
 2'nci katta oturuyorlar
 3üncü sırada bekleyin
 4. ve 5'inci arasında bir yerde
+103. sırada
+2000. saniye
 
 # Bullet points (preserved)
 1. Sabah kahvaltısı
@@ -42,6 +51,8 @@ birinci sınıf öğrencileri
 ikinci katta oturuyorlar
 üçüncü sırada bekleyin
 dördüncü ve beşinci arasında bir yerde
+yüz üçüncü sırada
+iki bininci saniye
 
 # Bullet points (preserved)
 1. Sabah kahvaltısı
@@ -53,6 +64,8 @@ dördüncü ve beşinci arasında bir yerde
 The module uses regular expressions to detect and convert various ordinal formats. It processes the text line by line, checking if each line is a bullet point (starts with a number followed by a period and an uppercase word) and preserving it if it is.
 
 The module uses the `text_utils` module for checking if a word starts with an uppercase letter, which is crucial for determining whether a line is a bullet point or not.
+
+For big numbers, the module first converts the number to its text representation (e.g., "iki bin" for 2000) and then adds the appropriate ordinal suffix to the last word (e.g., "iki bininci" for 2000.).
 
 ## Dependencies
 

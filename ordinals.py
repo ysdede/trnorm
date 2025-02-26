@@ -12,6 +12,115 @@ context_ordinal = re.compile(r'(\b\d+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)
 # Pattern specifically for bullet points at the beginning of lines
 bullet_point_pattern = re.compile(r'^\s*(\d+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
 
+# Dictionary for basic ordinals
+ones = {
+    0: "", 1: "bir", 2: "iki", 3: "üç", 4: "dört", 5: "beş",
+    6: "altı", 7: "yedi", 8: "sekiz", 9: "dokuz"
+}
+
+tens = {
+    1: "on", 2: "yirmi", 3: "otuz", 4: "kırk", 5: "elli",
+    6: "altmış", 7: "yetmiş", 8: "seksen", 9: "doksan"
+}
+
+# Special cases for common ordinals
+special_cases = {
+    1: "birinci", 2: "ikinci", 3: "üçüncü", 4: "dördüncü", 5: "beşinci",
+    6: "altıncı", 7: "yedinci", 8: "sekizinci", 9: "dokuzuncu", 10: "onuncu",
+    20: "yirminci", 30: "otuzuncu", 40: "kırkıncı", 50: "ellinci",
+    60: "altmışıncı", 70: "yetmişinci", 80: "sekseninci", 90: "doksanıncı",
+    100: "yüzüncü", 1000: "bininci"
+}
+
+# Convert a number to its text representation (without ordinal suffix)
+def normalize_number(num):
+    """
+    Convert an integer to its text representation in Turkish.
+    
+    Args:
+        num: The number to convert
+        
+    Returns:
+        The text representation (without ordinal suffix)
+    """
+    if num == 0:
+        return "sıfır"
+    
+    # Handle billions
+    if num >= 1000000000:
+        billions = num // 1000000000
+        remainder = num % 1000000000
+        
+        if billions == 1:
+            result = "bir milyar"
+        else:
+            result = f"{normalize_number(billions)} milyar"
+        
+        if remainder > 0:
+            result += f" {normalize_number(remainder)}"
+        
+        return result
+    
+    # Handle millions
+    if num >= 1000000:
+        millions = num // 1000000
+        remainder = num % 1000000
+        
+        if millions == 1:
+            result = "bir milyon"
+        else:
+            result = f"{normalize_number(millions)} milyon"
+        
+        if remainder > 0:
+            result += f" {normalize_number(remainder)}"
+        
+        return result
+    
+    # Handle thousands
+    if num >= 1000:
+        thousands = num // 1000
+        remainder = num % 1000
+        
+        if thousands == 1:
+            result = "bin"
+        else:
+            result = f"{normalize_number(thousands)} bin"
+        
+        if remainder > 0:
+            result += f" {normalize_number(remainder)}"
+        
+        return result
+    
+    # Handle hundreds
+    if num >= 100:
+        hundreds_digit = num // 100
+        remainder = num % 100
+        
+        if hundreds_digit == 1:
+            result = "yüz"
+        else:
+            result = f"{ones[hundreds_digit]} yüz"
+        
+        if remainder > 0:
+            result += f" {normalize_number(remainder)}"
+        
+        return result
+    
+    # Handle tens
+    if num >= 10:
+        tens_digit = num // 10
+        remainder = num % 10
+        
+        result = tens[tens_digit]
+        
+        if remainder > 0:
+            result += f" {ones[remainder]}"
+        
+        return result
+    
+    # Handle ones
+    return ones[num]
+
 # Convert numbers to their textual representation in Turkish
 def num_to_text(n):
     """
@@ -23,59 +132,61 @@ def num_to_text(n):
     Returns:
         The ordinal text representation
     """
-    # Dictionary for basic ordinals
-    ones = {
-        0: "", 1: "bir", 2: "iki", 3: "üç", 4: "dört", 5: "beş",
-        6: "altı", 7: "yedi", 8: "sekiz", 9: "dokuz"
-    }
-    
-    tens = {
-        1: "on", 2: "yirmi", 3: "otuz", 4: "kırk", 5: "elli",
-        6: "altmış", 7: "yetmiş", 8: "seksen", 9: "doksan"
-    }
-    
-    # Special cases for common ordinals
-    special_cases = {
-        1: "birinci", 2: "ikinci", 3: "üçüncü", 4: "dördüncü", 5: "beşinci",
-        6: "altıncı", 7: "yedinci", 8: "sekizinci", 9: "dokuzuncu", 10: "onuncu",
-        20: "yirminci", 30: "otuzuncu", 40: "kırkıncı", 50: "ellinci",
-        60: "altmışıncı", 70: "yetmişinci", 80: "sekseninci", 90: "doksanıncı",
-        100: "yüzüncü", 1000: "bininci"
-    }
-    
+    # Check for special cases first
     if n in special_cases:
         return special_cases[n]
     
-    # Handle numbers from 11-99
-    if 11 <= n < 100:
-        ten_digit = n // 10
-        one_digit = n % 10
-        
-        if one_digit == 0:  # Numbers ending with 0
-            return tens[ten_digit] + "ıncı"
-        else:
-            # For compound numbers, add the suffix to the last word
-            if one_digit == 1:
-                return tens[ten_digit] + " birinci"
-            elif one_digit == 2:
-                return tens[ten_digit] + " ikinci"
-            elif one_digit == 3:
-                return tens[ten_digit] + " üçüncü"
-            elif one_digit == 4:
-                return tens[ten_digit] + " dördüncü"
-            elif one_digit == 5:
-                return tens[ten_digit] + " beşinci"
-            elif one_digit == 6:
-                return tens[ten_digit] + " altıncı"
-            elif one_digit == 7:
-                return tens[ten_digit] + " yedinci"
-            elif one_digit == 8:
-                return tens[ten_digit] + " sekizinci"
-            elif one_digit == 9:
-                return tens[ten_digit] + " dokuzuncu"
+    # Convert the number to its text representation
+    words = normalize_number(n)
     
-    # Handle larger numbers (simplified approach)
-    return special_cases.get(n, f"{n}.")
+    # Add ordinal suffix
+    if words.endswith("bir"):
+        return words[:-3] + "birinci"
+    elif words.endswith("iki"):
+        return words[:-3] + "ikinci"
+    elif words.endswith("üç"):
+        return words[:-2] + "üçüncü"
+    elif words.endswith("dört"):
+        return words[:-4] + "dördüncü"
+    elif words.endswith("beş"):
+        return words[:-3] + "beşinci"
+    elif words.endswith("altı"):
+        return words[:-4] + "altıncı"
+    elif words.endswith("yedi"):
+        return words[:-4] + "yedinci"
+    elif words.endswith("sekiz"):
+        return words[:-5] + "sekizinci"
+    elif words.endswith("dokuz"):
+        return words[:-5] + "dokuzuncu"
+    elif words.endswith("on"):
+        return words[:-2] + "onuncu"
+    elif words.endswith("yirmi"):
+        return words[:-5] + "yirminci"
+    elif words.endswith("otuz"):
+        return words[:-4] + "otuzuncu"
+    elif words.endswith("kırk"):
+        return words[:-4] + "kırkıncı"
+    elif words.endswith("elli"):
+        return words[:-4] + "ellinci"
+    elif words.endswith("altmış"):
+        return words[:-6] + "altmışıncı"
+    elif words.endswith("yetmiş"):
+        return words[:-6] + "yetmişinci"
+    elif words.endswith("seksen"):
+        return words[:-6] + "sekseninci"
+    elif words.endswith("doksan"):
+        return words[:-6] + "doksanıncı"
+    elif words.endswith("yüz"):
+        return words[:-3] + "yüzüncü"
+    elif words.endswith("bin"):
+        return words[:-3] + "bininci"
+    elif words.endswith("milyon"):
+        return words[:-6] + "milyonuncu"
+    elif words.endswith("milyar"):
+        return words[:-6] + "milyarıncı"
+    
+    # Default case (should not happen with our implementation)
+    return words + "ıncı"
 
 # Check if a string starts with an uppercase letter (using text_utils)
 def is_uppercase_first(s):
