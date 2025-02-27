@@ -4,7 +4,7 @@ Demo of Roman numeral functionality in the trnorm package.
 This example demonstrates:
 1. Converting Roman numerals to Arabic numbers
 2. Checking if a string is a valid Roman numeral
-3. Normalizing Roman ordinals in text
+3. Normalizing Roman ordinals in Turkish text
 """
 
 from trnorm import roman_to_arabic, is_roman_numeral, normalize_ordinals
@@ -15,8 +15,9 @@ def demo_roman_to_arabic():
     print("\n=== Roman to Arabic Conversion ===")
     
     examples = [
-        "I", "IV", "V", "X", "XIV", "XIX", "XX", "XL", "L", 
-        "XC", "C", "D", "M", "MCMXCIX", "MMXXIV"
+        "I", "IV", "V", "IX", "X", "XIV", "XIX", "XX", 
+        "XL", "L", "XC", "C", "CD", "D", "CM", "M", 
+        "MCMXCIX", "MMXXIV"
     ]
     
     print(f"{'Roman':<10} {'Arabic':<10}")
@@ -48,7 +49,7 @@ def demo_is_roman_numeral():
 
 
 def demo_roman_ordinals():
-    """Demonstrate normalization of Roman ordinals in text."""
+    """Demonstrate normalization of Roman ordinals in Turkish text."""
     print("\n=== Roman Ordinals Normalization ===")
     
     examples = [
@@ -56,7 +57,12 @@ def demo_roman_ordinals():
         "XX. yüzyılda teknoloji hızla gelişti.",
         "III. Selim, Osmanlı padişahıydı.",
         "XIV. Louis, Fransa kralıydı.",
-        "I. Dünya Savaşı'ndan sonra II. Dünya Savaşı başladı."
+        "II. Wilhelm, Almanya imparatoruydu.",
+        "V. Karl, Kutsal Roma İmparatoru'ydu.",
+        "VIII. Edward, İngiltere kralıydı.",
+        "I. Dünya Savaşı'ndan sonra II. Dünya Savaşı başladı.",
+        "XIX. yüzyıldan XX. yüzyıla geçiş süreci.",
+        "3. sınıf öğrencileri ve II. Dünya Savaşı hakkında 20. yüzyılın en önemli olaylarından biri olan V. büyük savaş."
     ]
     
     for text in examples:
