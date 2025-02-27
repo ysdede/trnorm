@@ -142,5 +142,59 @@ class TestTurkishNumberConverter(unittest.TestCase):
         for date, expected in test_cases.items():
             self.assertEqual(self.converter.convert_numbers_to_words(date), expected)
 
+    def test_numbers_with_apostrophes(self):
+        """Test numbers with apostrophes, which should convert the number part but preserve the suffix"""
+        test_cases = {
+            # Basic cases with different suffixes
+            "1960'lı": "bin dokuz yüz altmış'lı",
+            "67'ler": "altmış yedi'ler",
+            "100'lerce": "yüz'lerce",
+            "2000'li": "iki bin'li",
+            "80'ler": "seksen'ler",
+            "30'ar": "otuz'ar",
+            "1990'ların": "bin dokuz yüz doksan'ların",
+            "1000'den": "bin'den",
+            "50'şer": "elli'şer",
+            "200'ü": "iki yüz'ü",
+            
+            # Edge cases
+            "0'dan": "sıfır'dan",
+            "1.000'lik": "bin'lik",  # With thousand separator
+            "1,5'lik": "bir virgül beş'lik",  # With decimal
+            "1.234,56'lık": "bin iki yüz otuz dört virgül elli altı'lık",  # Complex number
+            
+            # Numbers with apostrophes in text
+            "1960'lı yıllarda": "bin dokuz yüz altmış'lı yıllarda",
+            "67'ler kuşağı": "altmış yedi'ler kuşağı",
+            "100'lerce insan": "yüz'lerce insan",
+            "Türkiye'de 80'ler müziği": "Türkiye'de seksen'ler müziği",
+            "Sınıfta 30'ar kişilik": "Sınıfta otuz'ar kişilik",
+            "Depremde 1000'den fazla": "Depremde bin'den fazla",
+            "Toplantıya 200'ü aşkın": "Toplantıya iki yüz'ü aşkın",
+            
+            # Additional edge cases (focusing only on apostrophe handling, not ordinals)
+            "42'ye kadar": "kırk iki'ye kadar",  # With dative case
+            "100'e yakın": "yüz'e yakın",  # With dative case
+            "15'i geçti": "on beş'i geçti",  # With accusative case
+            "7'si geldi": "yedi'si geldi",  # With possessive
+            
+            # Multiple apostrophes in a sentence
+            "1960'lı yılların 70'li dönemleri": "bin dokuz yüz altmış'lı yılların yetmiş'li dönemleri",
+            "100'lerce insan 1000'lerce kitap okudu": "yüz'lerce insan bin'lerce kitap okudu",
+            
+            # Mixed with punctuation and special characters
+            "1960'lı, 70'li ve 80'li yıllar": "bin dokuz yüz altmış'lı, yetmiş'li ve seksen'li yıllar",
+            "2000'den önce, 1990'ların sonunda": "iki bin'den önce, bin dokuz yüz doksan'ların sonunda",
+            "15'i, 20'si ve 25'i": "on beş'i, yirmi'si ve yirmi beş'i",
+            
+            # Complex sentences with multiple number formats (focusing only on apostrophe handling)
+            "1960'lı yıllarda 2,5 milyon insan 100'lerce kitap okudu.": "bin dokuz yüz altmış'lı yıllarda iki virgül beş milyon insan yüz'lerce kitap okudu.",
+            "Sınıfta 30'ar kişilik gruplar oluşturuldu.": "Sınıfta otuz'ar kişilik gruplar oluşturuldu.",
+            "1990'ların başında 15.000'den fazla kişi katıldı.": "bin dokuz yüz doksan'ların başında on beş bin'den fazla kişi katıldı.",
+            "2023'ün ilk 6 ayında 100'ü aşkın etkinlik düzenlendi.": "iki bin yirmi üç'ün ilk altı ayında yüz'ü aşkın etkinlik düzenlendi."
+        }
+        for text, expected in test_cases.items():
+            self.assertEqual(self.converter.convert_numbers_to_words(text), expected)
+
 if __name__ == '__main__':
     unittest.main()

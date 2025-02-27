@@ -51,6 +51,36 @@ def demo_number_conversion():
         print(f"{example[:57] + '...' if len(example) > 57 else example.ljust(60)}{converted}")
 
 
+def demo_apostrophe_handling():
+    """Demonstrate handling of apostrophes in numbers."""
+    print_section("Apostrophe Handling in Numbers")
+    
+    # The updated code now correctly handles numbers with apostrophes
+    # by splitting tokens at apostrophes, converting the number part to text,
+    # and preserving the suffix after the apostrophe.
+    examples = [
+        "1960'lı yıllarda ekonomik büyüme hızlandı.",
+        "67'ler kuşağı önemli değişimlere imza attı.",
+        "100'lerce insan meydanda toplandı.",
+        "2000'li yılların başında teknoloji hızla gelişti.",
+        "Türkiye'de 80'ler müziği hala popüler.",
+        "Sınıfta 30'ar kişilik gruplar oluşturuldu.",
+        "Bu kitap 1990'ların en iyi eserleri arasında.",
+        "Depremde 1000'den fazla bina hasar gördü.",
+        "Şirket 50'şer kişilik ekipler kurdu.",
+        "Toplantıya 200'ü aşkın kişi katıldı.",
+        "67'ler",
+        "100'lerce"
+    ]
+    
+    print("Original Text".ljust(60) + "Converted Text")
+    print("-" * 120)
+    
+    for example in examples:
+        converted = convert_numbers_to_words_wrapper(example)
+        print(f"{example[:57] + '...' if len(example) > 57 else example.ljust(60)}{converted}")
+
+
 def demo_ordinal_conversion():
     """Demonstrate ordinal number conversion."""
     print_section("Ordinal Number Conversion")
@@ -86,7 +116,11 @@ def demo_combined_conversion():
         "Hayvancılık kuzu yapar. İşte yaptıktan 2 ay sonra, kuzularımız 2 aya kadar içer sütünü annesinin. 2-2,5 aya kadar içer.",
         "Ateşi 35 derece, pH değeri 7.28.",
         "Sultan III. Selim, ülkenin her bir yanından Mısır'a takviye kuvvet gönderilmesini emretti.",
-        "Ancak 67'nin son günlerinde trafiğin yoğun olduğu bir saatte üstündeki 100'lerce araçla birlikte çöktü. "
+        "Ancak 67'nin son günlerinde trafiğin yoğun olduğu bir saatte üstündeki 100'lerce araçla birlikte çöktü.",
+        "1960'lı yıllarda 3. Dünya ülkelerine yardım programları başlatıldı.",
+        "Toplantıya 200'ü aşkın kişi katıldı.",
+        "Sınıfta 30'ar kişilik gruplar oluşturuldu.",
+        "Bu kitap 1990'ların en iyi eserleri arasında."
     ]
     
     print("Original Text".ljust(60) + "Converted Text")
@@ -103,6 +137,7 @@ def main():
     """Run all demos."""
     print("TURKISH NUMBER NORMALIZATION DEMO")
     demo_number_conversion()
+    demo_apostrophe_handling()
     demo_ordinal_conversion()
     demo_combined_conversion()
 

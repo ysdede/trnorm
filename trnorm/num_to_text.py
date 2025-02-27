@@ -88,34 +88,71 @@ class NumberToTextConverter:
         # Handle thousand separators (periods) and decimal separators
         words = []
         for word in input_text.split():
-            converted = word
-            if any(char.isnumeric() for char in word):
-                # Handle trailing comma
-                append_comma = False
-                if word.endswith(","):
-                    word = word[:-1]
-                    append_comma = True
+            # Check if the word contains an apostrophe with a number before it
+            if "'" in word and any(char.isnumeric() for char in word.split("'")[0]):
+                # Split by apostrophe
+                parts = word.split("'", 1)  # Split only on the first apostrophe
+                number_part = parts[0]
+                suffix_part = "'" + parts[1] if len(parts) > 1 else ""
                 
-                # Handle decimal and thousand separators
-                parts = word.split(",")
-                if len(parts) > 1:  # Has decimal part
-                    integer_part = parts[0].replace(".", "")
-                    decimal_part = parts[1]
-                    try:
-                        num = float(integer_part + "." + decimal_part)
-                        converted = self._num_to_words(num, num_dec_digits, merge_words)
-                    except ValueError:
-                        pass
-                else:  # No decimal part
-                    try:
-                        num = int(word.replace(".", ""))
-                        converted = self._int_to_words(num, merge_words=merge_words)
-                    except ValueError:
-                        pass
+                converted_number = number_part
+                if any(char.isnumeric() for char in number_part):
+                    # Handle trailing comma
+                    append_comma = False
+                    if number_part.endswith(","):
+                        number_part = number_part[:-1]
+                        append_comma = True
+                    
+                    # Handle decimal and thousand separators
+                    decimal_parts = number_part.split(",")
+                    if len(decimal_parts) > 1:  # Has decimal part
+                        integer_part = decimal_parts[0].replace(".", "")
+                        decimal_part = decimal_parts[1]
+                        try:
+                            num = float(integer_part + "." + decimal_part)
+                            converted_number = self._num_to_words(num, num_dec_digits, merge_words)
+                        except ValueError:
+                            pass
+                    else:  # No decimal part
+                        try:
+                            num = int(number_part.replace(".", ""))
+                            converted_number = self._int_to_words(num, merge_words=merge_words)
+                        except ValueError:
+                            pass
+                    
+                    if append_comma:
+                        converted_number += ","
                 
-                if append_comma:
-                    converted += ","
-            words.append(converted)
+                words.append(converted_number + suffix_part)
+            else:
+                converted = word
+                if any(char.isnumeric() for char in word):
+                    # Handle trailing comma
+                    append_comma = False
+                    if word.endswith(","):
+                        word = word[:-1]
+                        append_comma = True
+                    
+                    # Handle decimal and thousand separators
+                    parts = word.split(",")
+                    if len(parts) > 1:  # Has decimal part
+                        integer_part = parts[0].replace(".", "")
+                        decimal_part = parts[1]
+                        try:
+                            num = float(integer_part + "." + decimal_part)
+                            converted = self._num_to_words(num, num_dec_digits, merge_words)
+                        except ValueError:
+                            pass
+                    else:  # No decimal part
+                        try:
+                            num = int(word.replace(".", ""))
+                            converted = self._int_to_words(num, merge_words=merge_words)
+                        except ValueError:
+                            pass
+                    
+                    if append_comma:
+                        converted += ","
+                words.append(converted)
 
         result = " ".join(words)
         result = result.replace(" |$| ", ", ")
