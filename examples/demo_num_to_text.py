@@ -133,13 +133,45 @@ def demo_combined_conversion():
         print(f"{example[:57] + '...' if len(example) > 57 else example.ljust(60)}{converted}")
 
 
+def demo_divide_symbol_handling():
+    """Demonstrate handling of divide symbols in numbers."""
+    print_section("Divide Symbol Handling in Numbers")
+    
+    # The updated code now converts numbers on both sides of the divide symbol
+    # while preserving the divide symbol (/) itself
+    examples = [
+        "7/24 hizmet veriyoruz.",
+        "Pasta 1/3 oranında çikolata içeriyor.",
+        "Toplantı 1/2 saat sürdü.",
+        "Şirketin 2/3'ü yabancı yatırımcılara ait.",
+        "Oran 3/4 olarak belirlendi.",
+        "Yarışmacıların 1/5'i finale kaldı.",
+        "Bugün 7/24 açığız.",
+        "Bu ilaçtan günde 1/2 tablet alınız.",
+        "Sınıfın 1/4'ü sınavı geçemedi.",
+        "Proje bütçesinin 2/3'ü harcandı."
+    ]
+    
+    print("Original Text".ljust(60) + "Converted Text")
+    print("-" * 120)
+    
+    for example in examples:
+        converted = convert_numbers_to_words_wrapper(example)
+        print(f"{example[:57] + '...' if len(example) > 57 else example.ljust(60)}{converted}")
+
+
 def main():
     """Run all demos."""
-    print("TURKISH NUMBER NORMALIZATION DEMO")
+    print("Turkish Number-to-Text Conversion Demo")
+    print("This script demonstrates various number conversion capabilities.")
+    
     demo_number_conversion()
     demo_apostrophe_handling()
     demo_ordinal_conversion()
     demo_combined_conversion()
+    demo_divide_symbol_handling()
+    
+    print("\nDemo completed!")
 
 
 if __name__ == "__main__":

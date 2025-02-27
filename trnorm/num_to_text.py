@@ -63,26 +63,52 @@ class NumberToTextConverter:
 
     def convert_numbers_to_words(self, input_text, num_dec_digits=6, decimal_seperator=",", merge_words=False):
         """
-        Inherited from 'https://github.com/vngrs-ai/vnlp/blob/main/vnlp/normalizer/normalizer.py'
+        Convert numeric strings into their Turkish text representation.
 
-        Converts numbers to word form.
+        This method converts numbers in the input text to their Turkish word equivalents.
+        For example, "123" becomes "yüz yirmi üç".
+
+        The method handles:
+        - Regular numbers (e.g., "123" -> "yüz yirmi üç")
+        - Decimal numbers (e.g., "12,5" -> "on iki virgül beş")
+        - Numbers with apostrophes (e.g., "100'lerce" -> "yüz'lerce")
+        - Numbers with divide symbols (e.g., "7/24" -> "yedi/yirmi dört")
+        - Combinations of the above (e.g., "2/3'ü" -> "iki/üç'ü")
 
         Args:
-            tokens:
-                List of input tokens.
-            num_dec_digits:
-                Number of precision (decimal points) for floats.
-            decimal_seperator:
-                Decimal seperator character. Comma "," CAN NOT be "." for Turkish!
+            input_text (str): The input text containing numbers to be converted.
+            num_dec_digits (int, optional): Maximum number of decimal digits to convert. Defaults to 6.
+            decimal_seperator (str, optional): The character used as decimal separator. Defaults to ",".
+            merge_words (bool, optional): Whether to merge words in the output. Defaults to False.
 
         Returns:
-            List of converted tokens
-
+            str: The input text with numbers converted to their Turkish word equivalents.
         """
         input_text = self._convert_dates_to_words(input_text, merge_words)
         input_text = input_text.replace(", ", " |$| ")
         input_text = input_text.replace("-", " ~ ")
         input_text = input_text.replace(":", ": ")  # Ensure space after colon
+        
+        # Handle divide symbol (/) in formats like 7/24 and 1/3
+        # We'll convert the numbers on both sides while preserving the divide symbol
+        divide_placeholder = " |DIVIDE| "
+        
+        # Process words that contain the divide symbol
+        processed_text = []
+        for word in input_text.split():
+            if "/" in word and any(char.isnumeric() for char in word):
+                # Check if it's a numeric format like 7/24 or 1/3
+                parts = word.split("/")
+                if len(parts) == 2 and all(part.strip() and any(char.isnumeric() for char in part) for part in parts):
+                    # Replace / with the placeholder
+                    processed_word = parts[0] + divide_placeholder + parts[1]
+                    processed_text.append(processed_word)
+                else:
+                    processed_text.append(word)
+            else:
+                processed_text.append(word)
+        
+        input_text = " ".join(processed_text)
         self.decimal_seperator = decimal_seperator
         
         # Handle thousand separators (periods) and decimal separators
@@ -122,7 +148,6 @@ class NumberToTextConverter:
                     
                     if append_comma:
                         converted_number += ","
-                
                 words.append(converted_number + suffix_part)
             else:
                 converted = word
@@ -134,10 +159,10 @@ class NumberToTextConverter:
                         append_comma = True
                     
                     # Handle decimal and thousand separators
-                    parts = word.split(",")
-                    if len(parts) > 1:  # Has decimal part
-                        integer_part = parts[0].replace(".", "")
-                        decimal_part = parts[1]
+                    decimal_parts = word.split(",")
+                    if len(decimal_parts) > 1:  # Has decimal part
+                        integer_part = decimal_parts[0].replace(".", "")
+                        decimal_part = decimal_parts[1]
                         try:
                             num = float(integer_part + "." + decimal_part)
                             converted = self._num_to_words(num, num_dec_digits, merge_words)
@@ -157,6 +182,10 @@ class NumberToTextConverter:
         result = " ".join(words)
         result = result.replace(" |$| ", ", ")
         result = result.replace(" ~ ", "-")
+        
+        # Replace the divide placeholder with the original divide symbol (/)
+        result = result.replace(divide_placeholder, "/")
+        
         result = result.replace("  ", " ")  # Remove double spaces
         return result.strip()
         

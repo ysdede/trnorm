@@ -196,5 +196,22 @@ class TestTurkishNumberConverter(unittest.TestCase):
         for text, expected in test_cases.items():
             self.assertEqual(self.converter.convert_numbers_to_words(text), expected)
 
+    def test_divide_symbol_handling(self):
+        """Test handling of divide symbols in numbers"""
+        test_cases = {
+            "7/24": "yedi/yirmi dört",
+            "1/3": "bir/üç",
+            "1/2": "bir/iki",
+            "2/3": "iki/üç",
+            "3/4": "üç/dört",
+            "1/5": "bir/beş",
+            "2/3'ü": "iki/üç'ü",
+            "1/4'ü": "bir/dört'ü",
+            "1/2'si": "bir/iki'si",
+            "3/4'ünü": "üç/dört'ünü"
+        }
+        for number, expected in test_cases.items():
+            self.assertEqual(self.converter.convert_numbers_to_words(number), expected)
+
 if __name__ == '__main__':
     unittest.main()

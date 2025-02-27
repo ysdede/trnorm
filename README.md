@@ -37,6 +37,16 @@ print(converter.convert("42"))  # "kırk iki"
 text = "Bugün 25 Nisan 2025 tarihinde 42 kişi katıldı."
 normalized = convert_numbers_to_words_wrapper(text)
 print(normalized)  # "Bugün yirmi beş Nisan iki bin yirmi beş tarihinde kırk iki kişi katıldı."
+
+# Convert numbers with apostrophes
+text = "1960'lı yıllarda 100'lerce insan katıldı."
+normalized = convert_numbers_to_words_wrapper(text)
+print(normalized)  # "bin dokuz yüz altmış'lı yıllarda yüz'lerce insan katıldı."
+
+# Convert numbers with divide symbols
+text = "7/24 hizmet veriyoruz ve işin 2/3'ü tamamlandı."
+normalized = convert_numbers_to_words_wrapper(text)
+print(normalized)  # "yedi/yirmi dört hizmet veriyoruz ve işin iki/üç'ü tamamlandı."
 ```
 
 ### Ordinal Number Normalization
