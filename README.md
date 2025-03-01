@@ -2,6 +2,8 @@
 
 Turkish text normalization tools for natural language processing.
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 ## Overview
 
 TRNorm is a comprehensive Python package designed for Turkish text normalization, providing tools to convert numbers, ordinals (including Roman numerals), and handle Turkish-specific text operations. It's built to support natural language processing tasks for Turkish text.
@@ -13,8 +15,11 @@ TRNorm is a comprehensive Python package designed for Turkish text normalization
 - **Number to Text Conversion**: Convert numeric values to their Turkish text representation
 - **Ordinal Number Normalization**: Convert ordinal numbers (including Roman numerals) to their Turkish text representation
 - **Roman Numeral Processing**: Convert Roman numerals to Arabic numbers and normalize Roman ordinals in text
+- **Symbol Conversion**: Convert special symbols (like %, €, $) to their text representation
 - **Turkish Suffix Handling**: Add Turkish suffixes (ile, ise, iken) to words following vowel harmony rules
 - **Text Utilities**: Various text utility functions for Turkish language processing
+- **Metrics**: Text similarity metrics (WER, CER, Levenshtein distance)
+- **Legacy Normalizer**: Backward compatibility with previous normalizer implementation
 
 ## Installation
 
@@ -79,6 +84,17 @@ print(is_roman_numeral("XIV"))  # True
 print(is_roman_numeral("ABC"))  # False
 ```
 
+### Symbol Conversion
+
+```python
+from trnorm import convert_symbols
+
+# Convert symbols to text
+text = "Ürün %20 indirimli ve fiyatı 50€."
+normalized = convert_symbols(text)
+print(normalized)  # "Ürün yüzde yirmi indirimli ve fiyatı elli avro."
+```
+
 ### Turkish Suffix Handling
 
 ```python
@@ -107,6 +123,38 @@ print(turkish_upper("istanbul"))  # "İSTANBUL"
 print(turkish_capitalize("istanbul"))  # "İstanbul"
 ```
 
+### Metrics
+
+```python
+from trnorm import wer, cer, levenshtein_distance
+
+reference = "bu bir test cümlesidir"
+hypothesis = "bu bir deneme cümlesi"
+
+print(wer(reference, hypothesis))  # Word Error Rate
+print(cer(reference, hypothesis))  # Character Error Rate
+print(levenshtein_distance(reference, hypothesis))  # Levenshtein Distance
+```
+
+### Legacy Normalizer
+
+```python
+from trnorm import normalize_text, replace_hatted_characters
+
+# Basic normalization
+text = "âîôû Çok iyi ve nazik biriydi. Prusya'daki ilk karşılaşmamızda onu konuşturmayı başarmıştım."
+normalized = normalize_text(text)
+print(normalized)  # "aiou çok iyi ve nazik biriydi prusyadaki ilk karşılaşmamızda onu konuşturmayı başarmıştım"
+
+# Only replace hatted characters
+text_with_hats = "âîôû Çok iyi"
+print(replace_hatted_characters(text_with_hats))  # "aiou Çok iyi"
+
+# Process a list of texts
+texts = ["Turner'ın 'Köle Gemisi' isimli tablosuna bakıyoruz.", "Turner'ın Köle Gemisi isimli tablosuna bakıyoruz."]
+normalized_texts = normalize_text(texts)
+```
+
 ## Examples
 
 The package includes several example scripts in the `examples` directory:
@@ -114,10 +162,9 @@ The package includes several example scripts in the `examples` directory:
 - `demo_ordinals.py`: Demonstrates ordinal number normalization
 - `demo_iken.py`: Shows Turkish suffix handling
 - `demo_text_utils.py`: Illustrates text utility functions
-
-Additionally, there are more comprehensive demos in the `demos` directory:
-
-- `roman_demo.py`: Demonstrates Roman numeral conversion and Roman ordinal normalization
+- `demo_num_to_text.py`: Shows number to text conversion
+- `demo_metrics.py`: Demonstrates text similarity metrics
+- `demo_legacy_normalizer.py`: Shows legacy normalizer functionality
 
 ## Development
 
