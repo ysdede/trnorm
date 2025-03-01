@@ -8,6 +8,7 @@ This package provides tools for normalizing Turkish text, including:
 - Converting special symbols (like %) to their text representation
 - Adding Turkish suffixes to words (ile, ise, iken)
 - Various text utility functions for Turkish language processing
+- Metrics for text similarity (WER, CER, Levenshtein distance)
 """
 
 __version__ = "0.1.0"
@@ -17,6 +18,7 @@ from .ordinals import normalize_ordinals
 from .roman_numerals import roman_to_arabic, is_roman_numeral, find_roman_ordinals
 from .symbols import SymbolConverter, convert_symbols, default_converter, add_symbol_mapping
 from .symbol_mappings import get_all_mappings, get_mapping, add_mapping
+from .metrics import wer, cer, levenshtein_distance
 from .text_utils import (
     turkish_lower,
     turkish_upper,
@@ -44,6 +46,9 @@ __all__ = [
     "get_all_mappings",
     "get_mapping",
     "add_mapping",
+    "wer",
+    "cer",
+    "levenshtein_distance",
     "turkish_lower",
     "turkish_upper",
     "turkish_capitalize",
