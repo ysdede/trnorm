@@ -9,6 +9,7 @@ This package provides tools for normalizing Turkish text, including:
 - Adding Turkish suffixes to words (ile, ise, iken)
 - Various text utility functions for Turkish language processing
 - Metrics for text similarity (WER, CER, Levenshtein distance)
+- Legacy normalizer for backward compatibility
 """
 
 __version__ = "0.1.0"
@@ -19,6 +20,7 @@ from .roman_numerals import roman_to_arabic, is_roman_numeral, find_roman_ordina
 from .symbols import SymbolConverter, convert_symbols, default_converter, add_symbol_mapping
 from .symbol_mappings import get_all_mappings, get_mapping, add_mapping
 from .metrics import wer, cer, levenshtein_distance
+from .legacy_normalizer import normalize_text, replace_hatted_characters, turkish_lower as legacy_turkish_lower
 from .text_utils import (
     turkish_lower,
     turkish_upper,
@@ -49,6 +51,9 @@ __all__ = [
     "wer",
     "cer",
     "levenshtein_distance",
+    "normalize_text",
+    "replace_hatted_characters",
+    "legacy_turkish_lower",
     "turkish_lower",
     "turkish_upper",
     "turkish_capitalize",
