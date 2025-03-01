@@ -1,14 +1,14 @@
 # TRNorm
 
-Turkish text normalization tools for natural language processing.
+Turkish text normalization tools for ASR (Automatic Speech Recognition) benchmarking and evaluation.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Overview
 
-TRNorm is a comprehensive Python package designed for Turkish text normalization, providing tools to convert numbers, ordinals (including Roman numerals), and handle Turkish-specific text operations. It's built to support natural language processing tasks for Turkish text.
+TRNorm is a specialized Python package designed for normalizing Turkish text in ASR evaluation contexts. It provides tools to standardize text representations of numbers, ordinals, and symbols to ensure fair comparison between ASR system outputs and reference transcriptions.
 
-**Note**: This project is not aimed for perfect Turkish conversion/normalization. It may miss some conversions, but it is mainly created for fairer ASR benchmarking. The primary goal is to normalize references and predictions to be fair for well-performing ASR models and to avoid errors from weakly labeled audio datasets.
+This package is specifically created for fairer ASR benchmarking, not as a comprehensive Turkish NLP solution. The primary goal is to normalize references and predictions to enable more accurate evaluation of ASR models and to mitigate errors from weakly labeled audio datasets.
 
 ## Features
 
