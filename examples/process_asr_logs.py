@@ -19,6 +19,7 @@ We don't need duration and time for this task.
 
 from pathlib import Path
 from trnorm.metrics import wer, cer, levenshtein_distance
+from trnorm.legacy_normalizer import normalize_text
 
 log_root = r"C:\Drive\hf_cache"
 log_file = r"ysdede-yeni-split-0-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
@@ -71,9 +72,16 @@ with open(input_file, "r", encoding="utf-8") as f:
 
             count += 1
 
-            our_total_wer += wer(row_data["r"], row_data["p"])
-            our_total_cer += cer(row_data["r"], row_data["p"])
+            ref = normalize_text(row_data["r"])
+            hyp = normalize_text(row_data["p"])
 
+            our_wer = round(wer(ref, hyp) * 100, 2)
+            our_cer = round(cer(ref, hyp) * 100, 2)
+            our_total_wer += our_wer
+            our_total_cer += our_cer
+            print(f"{our_wer}/{row_data['wer']}")
+            if our_wer != row_data['wer']:
+                print(f"{row_data['r']}\n{row_data['p']}")
         except Exception as e:
             print(f"Error processing row: {row[:100]}... Error: {e}")
             continue  # Continue instead of exiting to process other rows
