@@ -42,12 +42,17 @@ def normalize_text(text):
     Returns:
         Normalized text with Turkish characters handled properly
     """
+
     if isinstance(text, list):
         return [normalize_text(item) for item in text]
-    else:
-        text = text.replace(" '", " ").replace("' ", " ").replace("'", "")
-        text = text.replace(' "', ' ').replace('" ', ' ').replace('"', '')
-        text = replace_hatted_characters(text)
-        text = turkish_lower(text)
-        text = re.sub(r'[^a-zçğıöşü]', ' ', text).replace("  ", " ")
-        return text.strip()
+        
+    original_text = text
+    text = text.replace(" '", " ").replace("' ", " ").replace("'", "")
+    text = text.replace(' "', ' ').replace('" ', ' ').replace('"', '')
+    text = replace_hatted_characters(text)
+    text = turkish_lower(text)
+    text = re.sub(r'[^a-zçğıöşü]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+
+    # Return the original text if normalization results in an empty string
+    return original_text if text.strip() == '' else text.strip()
