@@ -10,6 +10,8 @@ This package provides tools for normalizing Turkish text, including:
 - Various text utility functions for Turkish language processing
 - Metrics for text similarity (WER, CER, Levenshtein distance)
 - Legacy normalizer for backward compatibility
+- Comprehensive normalizer that applies all normalization steps in order
+- Utilities for handling dimensions and multiplication symbols
 """
 
 __version__ = "0.1.0"
@@ -33,6 +35,8 @@ from .text_utils import (
     sapkasiz,
     ekle,
 )
+from .normalizer import TurkishNormalizer, normalize, default_normalizer
+from .dimension_utils import preprocess_dimensions, normalize_dimensions
 
 __all__ = [
     "NumberToTextConverter",
@@ -64,4 +68,9 @@ __all__ = [
     "son_sesli_harf_kalin",
     "sapkasiz",
     "ekle",
+    "TurkishNormalizer",
+    "normalize",
+    "default_normalizer",
+    "preprocess_dimensions",
+    "normalize_dimensions",
 ]
