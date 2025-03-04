@@ -10,6 +10,9 @@ This package provides tools for normalizing Turkish text, including:
 - Various text utility functions for Turkish language processing
 - Metrics for text similarity (WER, CER, Levenshtein distance)
 - Legacy normalizer for backward compatibility
+- Comprehensive normalizer that applies all normalization steps in order
+- Utilities for handling dimensions and multiplication symbols
+- Flexible transformer-based approach for customizable text normalization
 """
 
 __version__ = "0.1.0"
@@ -32,6 +35,19 @@ from .text_utils import (
     son_sesli_harf_kalin,
     sapkasiz,
     ekle,
+)
+from .normalizer import TurkishNormalizer, normalize, default_normalizer
+from .dimension_utils import preprocess_dimensions, normalize_dimensions
+from .unit_utils import normalize_units
+from .transformer import (
+    Transformer,
+    TransformerPipeline,
+    transform,
+    get_available_transformers,
+    create_custom_transformer,
+    register_transformer,
+    AVAILABLE_TRANSFORMERS,
+    DEFAULT_TRANSFORMER_PIPELINE,
 )
 
 __all__ = [
@@ -64,4 +80,18 @@ __all__ = [
     "son_sesli_harf_kalin",
     "sapkasiz",
     "ekle",
+    "TurkishNormalizer",
+    "normalize",
+    "default_normalizer",
+    "preprocess_dimensions",
+    "normalize_dimensions",
+    "normalize_units",
+    "Transformer",
+    "TransformerPipeline",
+    "transform",
+    "get_available_transformers",
+    "create_custom_transformer",
+    "register_transformer",
+    "AVAILABLE_TRANSFORMERS",
+    "DEFAULT_TRANSFORMER_PIPELINE",
 ]

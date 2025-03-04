@@ -1,0 +1,163 @@
+# Turkish Text Normalizer
+
+The `TurkishNormalizer` class provides a comprehensive solution for normalizing Turkish text by applying all available normalization steps in the correct order.
+
+## Features
+
+- Converts numbers to their text representation (123 → yüz yirmi üç)
+- Normalizes ordinal numbers (1. → birinci)
+- Converts Roman numerals to Arabic numbers
+- Converts special symbols (%, $, etc.) to their text representation
+- Intelligently handles multiplication symbols in dimensions (3x4 → 3 çarpı 4, 2x5x6x3 → 2 çarpı 5 çarpı 6 çarpı 3)
+- Expands unit abbreviations to their full text (cm → santimetre, kg → kilogram)
+- Handles Turkish character casing and diacritical marks
+- Provides both a class-based API and a simple function-based API
+- Supports processing both single strings and lists of strings
+- Allows customization of which normalization steps to apply
+
+## Usage
+
+### Basic Usage
+
+```python
+from trnorm import normalize
+
+# Normalize a single string
+text = "Bugün 15. kattaki 3 toplantıya katıldım."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "bugün on beşinci kattaki üç toplantıya katıldım."
+
+# Normalize a list of strings
+texts = [
+    "Saat 14:30'da %25 indirimli ürünler satışa çıkacak.",
+    "II. Dünya Savaşı 1939-1945 yılları arasında gerçekleşti."
+]
+normalized_texts = normalize(texts)
+print(normalized_texts)
+# Output: [
+#   "saat on dört otuzda yüzde yirmi beş indirimli ürünler satışa çıkacak.",
+#   "ikinci dünya savaşı bin dokuz yüz otuz dokuz bin dokuz yüz kırk beş yılları arasında gerçekleşti."
+# ]
+```
+
+### Using the Class Directly
+
+```python
+from trnorm import TurkishNormalizer
+
+# Create a custom normalizer
+normalizer = TurkishNormalizer(
+    apply_number_conversion=True,
+    apply_ordinal_normalization=True,
+    apply_symbol_conversion=True,
+    apply_multiplication_symbol=True,
+    apply_unit_normalization=True,
+    apply_legacy_normalization=False,
+    lowercase=True,
+    remove_hats=True
+)
+
+# Normalize text
+text = "Ürün fiyatı 1.250,75 TL'dir."
+normalized_text = normalizer.normalize(text)
+print(normalized_text)
+# Output: "ürün fiyatı bin iki yüz elli virgül yetmiş beş türk lirası'dir."
+```
+
+### Customizing Normalization Steps
+
+```python
+from trnorm import normalize
+
+# Only convert numbers to text, keep case and diacritical marks
+text = "Âlim insanlar 15 kitap okumuş."
+normalized_text = normalize(
+    text,
+    apply_number_conversion=True,
+    apply_ordinal_normalization=False,
+    apply_symbol_conversion=False,
+    apply_multiplication_symbol=False,
+    apply_unit_normalization=False,
+    lowercase=False,
+    remove_hats=False
+)
+print(normalized_text)
+# Output: "Âlim insanlar on beş kitap okumuş."
+
+# Apply legacy normalization (more aggressive, removes punctuation)
+text = "Bugün 3x4 metre halı aldım."
+normalized_text = normalize(text, apply_legacy_normalization=True)
+print(normalized_text)
+# Output: "bugün üç çarpı dört metre halı aldım"
+```
+
+### Handling Dimensions and Multiplication Symbols
+
+```python
+from trnorm import normalize
+
+# Handle dimensions with merged multiplication symbols
+text = "Odanın boyutları 2x3x4 metre."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "odanın boyutları iki çarpı üç çarpı dört metre."
+
+# Handle dimensions with units
+text = "Halının boyutu 120x180cm."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "halının boyutu yüz yirmi çarpı yüz seksen santimetre."
+```
+
+### Handling Unit Abbreviations
+
+```python
+from trnorm import normalize
+
+# Convert unit abbreviations to full text
+text = "Masanın yüksekliği 75 cm."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "masanın yüksekliği yetmiş beş santimetre."
+
+# Multiple units in the same text
+text = "Odanın boyutları 5 m x 4 m, yüksekliği 3 m."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "odanın boyutları beş metre çarpı dört metre, yüksekliği üç metre."
+
+# Disable unit normalization
+text = "Sıcaklık 25 °C."
+normalized_text = normalize(text, apply_unit_normalization=False)
+print(normalized_text)
+# Output: "sıcaklık yirmi beş °c."
+```
+
+## Normalization Order
+
+The normalizer applies the following steps in order:
+
+1. Preprocess dimensions (add spaces between numbers and 'x')
+2. Symbol conversion (%, $, etc. to their text representation)
+3. Multiplication symbol replacement (3x4 → 3 çarpı 4)
+4. Number to text conversion (123 → yüz yirmi üç)
+5. Ordinal normalization (1. → birinci)
+6. Unit abbreviation expansion (cm → santimetre)
+7. Character normalization (lowercase, remove hats)
+8. Legacy normalization (if enabled)
+
+This order ensures that all normalization steps work correctly together.
+
+## Configuration Options
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `apply_number_conversion` | bool | True | Whether to convert numbers to their text representation |
+| `apply_ordinal_normalization` | bool | True | Whether to normalize ordinals |
+| `apply_symbol_conversion` | bool | True | Whether to convert symbols to their text representation |
+| `apply_multiplication_symbol` | bool | True | Whether to replace multiplication symbol 'x' with 'çarpı' |
+| `apply_unit_normalization` | bool | True | Whether to expand unit abbreviations to full text |
+| `apply_legacy_normalization` | bool | False | Whether to apply legacy normalization (more aggressive) |
+| `lowercase` | bool | True | Whether to convert text to lowercase |
+| `remove_hats` | bool | True | Whether to remove circumflex (hat) from Turkish characters |
