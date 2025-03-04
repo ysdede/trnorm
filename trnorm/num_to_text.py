@@ -157,6 +157,11 @@ class NumberToTextConverter:
         input_text = self._convert_dates_to_words(input_text, merge_words)
         input_text = self._convert_times_to_words(input_text, merge_words)
         
+        # Special handling for numbers followed by commas and spaces (e.g., "13, ")
+        # Replace with a special placeholder to preserve the pattern
+        comma_space_placeholder = " |COMMA_SPACE| "
+        input_text = re.sub(r'(\d+)(,\s+)', lambda m: self._int_to_words(int(m.group(1)), merge_words=merge_words) + comma_space_placeholder, input_text)
+        
         input_text = input_text.replace(", ", " |$| ")
         input_text = input_text.replace("-", " ~ ")
         input_text = input_text.replace(":", ": ")  # Ensure space after colon
@@ -257,6 +262,9 @@ class NumberToTextConverter:
         
         # Replace the divide placeholder with the original divide symbol (/)
         result = result.replace(divide_placeholder, "/")
+        
+        # Restore the comma space placeholder
+        result = result.replace(comma_space_placeholder, ", ")
         
         result = result.replace("  ", " ")  # Remove double spaces
         return result.strip()

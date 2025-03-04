@@ -15,6 +15,7 @@ The `TurkishNormalizer` class provides a comprehensive solution for normalizing 
 - Provides both a class-based API and a simple function-based API
 - Supports processing both single strings and lists of strings
 - Allows customization of which normalization steps to apply
+- Handles numbers followed by commas in lists and sequences
 
 ## Usage
 
@@ -159,6 +160,24 @@ text = "Saat 10.15'te görüşelim."
 normalized_text = normalize(text)
 print(normalized_text)
 # Output: "saat on on beşte görüşelim."
+```
+
+### Handling Number Lists and Sequences
+
+```python
+from trnorm import normalize
+
+# Convert numbers in lists
+text = "1, 2, 3 sayıları ardışıktır."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "bir, iki, üç sayıları ardışıktır."
+
+# Handle numbers in date sequences
+text = "Toplantımız 13, 14 ve 15 Mayıs tarihlerinde yapılacak."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "toplantımız on üç, on dört ve on beş mayıs tarihlerinde yapılacak."
 ```
 
 ## Normalization Order
