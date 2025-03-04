@@ -18,7 +18,7 @@ We don't need duration and time for this task.
 """
 
 from pathlib import Path
-from trnorm.metrics import wer, cer, levenshtein_distance
+from trnorm.metrics import wer, cer, levenshtein_distance, normalized_levenshtein_distance
 from trnorm.legacy_normalizer import normalize_text
 
 log_root = r"C:\Drive\hf_cache"
@@ -33,6 +33,7 @@ count = 0
 
 our_total_wer = 0
 our_total_cer = 0
+our_total_lev_dist = 0
 
 with open(input_file, "r", encoding="utf-8") as f:
     # Read the entire file as text
@@ -75,29 +76,37 @@ with open(input_file, "r", encoding="utf-8") as f:
             ref = normalize_text(row_data["r"])
             hyp = normalize_text(row_data["p"])
 
-            our_wer = round(wer(ref, hyp) * 100, 2)
-            our_cer = round(cer(ref, hyp) * 100, 2)
+            our_wer = wer(ref, hyp)
+            our_cer = cer(ref, hyp)
+            our_lev_dist = normalized_levenshtein_distance(ref, hyp)
+
             our_total_wer += our_wer
             our_total_cer += our_cer
-            print(f"{our_wer}/{row_data['wer']}")
-            if our_wer != row_data['wer']:
+            our_total_lev_dist += our_lev_dist
+
+            print(f"{our_wer * 100:.2f}/{row_data['wer']:.2f} - {our_lev_dist:.3f}/{row_data['lev_dist']:.3f}")
+            
+            if round(our_wer * 100, 2) != row_data['wer']:
                 print(f"{row_data['r']}\n{row_data['p']}")
         except Exception as e:
             print(f"Error processing row: {row[:100]}... Error: {e}")
             continue  # Continue instead of exiting to process other rows
 
 if count > 0:
-    average_wer = total_wer / count
-    average_lev_dist = total_lev_dist / count * 100
-    average_sim = total_sim / count * 100
+    average_wer = round((total_wer / count), 2)
+    average_lev_dist = round(total_lev_dist / count, 2)
+    average_sim = round(total_sim / count, 2)
     print(f"Average WER: {average_wer:.2f}%")
     print(f"Average Levenshtein Distance: {average_lev_dist:.2f}")
     print(f"Average Similarity: {average_sim:.2f}")
     print(f"Processed {count} valid rows out of {len(rows)} total rows")
     print(50 * "=")
 
-    print(f"Our WER: {our_total_wer / count:.2f}%")
-    print(f"Our CER: {our_total_cer / count:.2f}%")
-    
+    our_avg_wer = (our_total_wer / count) * 100
+    our_avg_cer = (our_total_cer / count) * 100
+    our_lev_dist = our_total_lev_dist / count
+    print(f"Our WER: {our_avg_wer:.2f}%")
+    print(f"Our CER: {our_avg_cer:.2f}%")
+    print(f"Our levenshtein distance: {our_lev_dist:.3f}")
 else:
     print("No valid rows were processed.")
