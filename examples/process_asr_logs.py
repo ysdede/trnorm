@@ -76,8 +76,10 @@ with open(input_file, "r", encoding="utf-8") as f:
 
             # ref = normalize_text(row_data["r"])
             # hyp = normalize_text(row_data["p"])
-            ref = normalize(row_data["r"], apply_legacy_normalization=True)
-            hyp = normalize(row_data["p"], apply_legacy_normalization=True)
+            # ref = normalize(row_data["r"], apply_legacy_normalization=True)
+            # hyp = normalize(row_data["p"], apply_legacy_normalization=True)
+            ref = normalize(row_data["r"], apply_apostrophe_handling=True, apply_legacy_normalization=True)
+            hyp = normalize(row_data["p"], apply_apostrophe_handling=True, apply_legacy_normalization=True)
 
             our_wer = wer(ref, hyp)
             our_cer = cer(ref, hyp)
