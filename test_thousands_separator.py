@@ -1,5 +1,7 @@
 from trnorm import normalize
-from trnorm.num_to_text import NumberToTextConverter
+from trnorm.num_to_text import NumberToTextConverter, convert_numbers_to_words_wrapper
+from trnorm.time_utils import normalize_times
+from trnorm.legacy_normalizer import turkish_lower
 
 # Test with examples that might be misinterpreted due to thousands separators
 examples = [
@@ -24,11 +26,24 @@ for example in examples:
     
 print("\n\nTesting with full normalization:")
 print("===============================")
+
+# Define converter lists for different normalization approaches
+without_time_converters = [
+    convert_numbers_to_words_wrapper,
+    turkish_lower
+]
+
+with_time_converters = [
+    normalize_times,
+    convert_numbers_to_words_wrapper,
+    turkish_lower
+]
+
 for example in examples:
     print(f"\nOriginal: {example}")
     # Test with time normalization disabled
-    without_time = normalize(example, apply_time_normalization=False)
+    without_time = normalize(example, without_time_converters)
     print(f"Without time normalization: {without_time}")
     # Test with time normalization enabled
-    with_time = normalize(example)
+    with_time = normalize(example, with_time_converters)
     print(f"With time normalization: {with_time}")

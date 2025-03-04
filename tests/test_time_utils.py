@@ -5,6 +5,8 @@ Tests for the time normalization functionality.
 import unittest
 from trnorm.time_utils import normalize_times
 from trnorm.normalizer import normalize
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.legacy_normalizer import turkish_lower
 
 
 class TestTimeNormalization(unittest.TestCase):
@@ -87,9 +89,16 @@ class TestTimeNormalization(unittest.TestCase):
             ),
         ]
         
+        # Create a list of converters for full normalization
+        converters = [
+            normalize_times,
+            convert_numbers_to_words_wrapper,
+            turkish_lower
+        ]
+        
         for input_text, expected_output in test_cases:
             with self.subTest(input_text=input_text):
-                result = normalize(input_text)
+                result = normalize(input_text, converters)
                 self.assertEqual(result, expected_output)
 
     def test_non_time_periods(self):

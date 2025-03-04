@@ -4,6 +4,8 @@ Unit tests for apostrophe handling in Turkish text normalization.
 import unittest
 from trnorm import normalize
 from trnorm.apostrophe_handler import remove_apostrophes
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.legacy_normalizer import turkish_lower
 
 
 class TestApostropheHandling(unittest.TestCase):
@@ -39,9 +41,18 @@ class TestApostropheHandling(unittest.TestCase):
             ("Türkiye'nin 81'i", "türkiyenin seksen biri")
         ]
 
+        # Create a list of converters that includes apostrophe handling
+        # Note: We need to convert numbers to words BEFORE removing apostrophes
+        # to handle cases like "7'yi" -> "yedi'yi" -> "yediyi"
+        converters = [
+            convert_numbers_to_words_wrapper,
+            remove_apostrophes,
+            turkish_lower
+        ]
+
         for input_text, expected_output in test_cases:
             with self.subTest(input_text=input_text):
-                result = normalize(input_text, apply_apostrophe_handling=True)
+                result = normalize(input_text, converters)
                 self.assertEqual(result, expected_output)
 
     def test_normalization_without_apostrophe_handling(self):
@@ -54,9 +65,15 @@ class TestApostropheHandling(unittest.TestCase):
             ("GoPro 7'yi kullanıyorum", "gopro yedi'yi kullanıyorum")
         ]
 
+        # Create a list of converters without apostrophe handling
+        converters = [
+            convert_numbers_to_words_wrapper,
+            turkish_lower
+        ]
+
         for input_text, expected_output in test_cases:
             with self.subTest(input_text=input_text):
-                result = normalize(input_text)
+                result = normalize(input_text, converters)
                 self.assertEqual(result, expected_output)
 
     def test_user_example(self):
@@ -64,7 +81,15 @@ class TestApostropheHandling(unittest.TestCase):
         ref = "GoPro Osmo Action'dan daha çok sevdiğim GoPro 7 bu sırada, 8'i almadım, niye almadım?"
         expected = "gopro osmo actiondan daha çok sevdiğim gopro yedi bu sırada, sekizi almadım, niye almadım?"
         
-        result = normalize(ref, apply_apostrophe_handling=True)
+        # Create a list of converters that includes apostrophe handling
+        # Note: We need to convert numbers to words BEFORE removing apostrophes
+        converters = [
+            convert_numbers_to_words_wrapper,
+            remove_apostrophes,
+            turkish_lower
+        ]
+        
+        result = normalize(ref, converters)
         self.assertEqual(result, expected)
 
 

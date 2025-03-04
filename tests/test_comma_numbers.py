@@ -3,7 +3,8 @@ Unit tests for numbers followed by commas.
 """
 import unittest
 from trnorm import normalize
-from trnorm.num_to_text import NumberToTextConverter
+from trnorm.num_to_text import NumberToTextConverter, convert_numbers_to_words_wrapper
+from trnorm.legacy_normalizer import turkish_lower
 
 
 class TestCommaNumbers(unittest.TestCase):
@@ -22,9 +23,15 @@ class TestCommaNumbers(unittest.TestCase):
              'general jukov, o günleri günlüğüne şu şekilde aktardı; "on üç, on dört ve on beş eylül günleri')
         ]
 
+        # Create a list of converters for normalization
+        converters = [
+            convert_numbers_to_words_wrapper,
+            turkish_lower
+        ]
+
         for input_text, expected_output in test_cases:
             with self.subTest(input_text=input_text):
-                result = normalize(input_text)
+                result = normalize(input_text, converters)
                 self.assertEqual(result, expected_output)
 
     def test_direct_conversion(self):

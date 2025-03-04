@@ -3,6 +3,9 @@ Test script to verify the apostrophe handling functionality.
 """
 from trnorm import normalize
 from trnorm.metrics import wer, cer
+from trnorm.apostrophe_handler import remove_apostrophes
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.legacy_normalizer import turkish_lower
 
 # The example text with the issue
 ref = "GoPro Osmo Action'dan daha çok sevdiğim GoPro 7 bu sırada, 8'i almadım, niye almadım?"
@@ -13,10 +16,14 @@ print(ref)
 print("\nOriginal Hypothesis:")
 print(hyp)
 
-# Test with the standard normalization
+# Test with the standard normalization (without apostrophe handling)
 print("\n--- With Standard Normalization ---")
-norm_ref = normalize(ref)
-norm_hyp = normalize(hyp)
+standard_converters = [
+    convert_numbers_to_words_wrapper,
+    turkish_lower
+]
+norm_ref = normalize(ref, standard_converters)
+norm_hyp = normalize(hyp, standard_converters)
 
 print("\nNormalized Reference:")
 print(norm_ref)
@@ -30,8 +37,13 @@ print(f"CER: {cer_score:.4f} ({cer_score*100:.2f}%)")
 
 # Test with apostrophe handling enabled
 print("\n--- With Apostrophe Handling Enabled ---")
-apo_norm_ref = normalize(ref, apply_apostrophe_handling=True)
-apo_norm_hyp = normalize(hyp, apply_apostrophe_handling=True)
+apostrophe_converters = [
+    convert_numbers_to_words_wrapper,
+    remove_apostrophes,
+    turkish_lower
+]
+apo_norm_ref = normalize(ref, apostrophe_converters)
+apo_norm_hyp = normalize(hyp, apostrophe_converters)
 
 print("\nApostrophe-Handled Reference:")
 print(apo_norm_ref)
@@ -55,8 +67,8 @@ test_cases = [
 
 for case in test_cases:
     print(f"\nOriginal: {case}")
-    standard_norm = normalize(case)
-    apo_norm = normalize(case, apply_apostrophe_handling=True)
+    standard_norm = normalize(case, standard_converters)
+    apo_norm = normalize(case, apostrophe_converters)
     print(f"Standard normalization: {standard_norm}")
     print(f"With apostrophe handling: {apo_norm}")
 
