@@ -20,6 +20,7 @@ We don't need duration and time for this task.
 from pathlib import Path
 from trnorm.metrics import wer, cer, levenshtein_distance, normalized_levenshtein_distance
 from trnorm.legacy_normalizer import normalize_text
+from trnorm import normalize, TurkishNormalizer
 
 log_root = r"C:\Drive\hf_cache"
 log_file = r"ysdede-yeni-split-0-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
@@ -73,8 +74,10 @@ with open(input_file, "r", encoding="utf-8") as f:
 
             count += 1
 
-            ref = normalize_text(row_data["r"])
-            hyp = normalize_text(row_data["p"])
+            # ref = normalize_text(row_data["r"])
+            # hyp = normalize_text(row_data["p"])
+            ref = normalize(row_data["r"], apply_legacy_normalization=True)
+            hyp = normalize(row_data["p"], apply_legacy_normalization=True)
 
             our_wer = wer(ref, hyp)
             our_cer = cer(ref, hyp)
@@ -83,11 +86,14 @@ with open(input_file, "r", encoding="utf-8") as f:
             our_total_wer += our_wer
             our_total_cer += our_cer
             our_total_lev_dist += our_lev_dist
-
-            print(f"{our_wer * 100:.2f}/{row_data['wer']:.2f} - {our_lev_dist:.3f}/{row_data['lev_dist']:.3f}")
             
-            if round(our_wer * 100, 2) != row_data['wer']:
+            if round(our_wer * 100, 2) > row_data['wer']:
+                print(f"{our_wer * 100:.2f}/{row_data['wer']:.2f} - {our_lev_dist:.3f}/{row_data['lev_dist']:.3f}")
                 print(f"{row_data['r']}\n{row_data['p']}")
+                print(ref)
+                print(hyp)
+                print("*" * 50)
+
         except Exception as e:
             print(f"Error processing row: {row[:100]}... Error: {e}")
             continue  # Continue instead of exiting to process other rows
