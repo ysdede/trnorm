@@ -11,7 +11,7 @@ The `TurkishNormalizer` class provides a comprehensive solution for normalizing 
 - Intelligently handles multiplication symbols in dimensions (3x4 → 3 çarpı 4, 2x5x6x3 → 2 çarpı 5 çarpı 6 çarpı 3)
 - Expands unit abbreviations to their full text (cm → santimetre, kg → kilogram)
 - Handles Turkish character casing and diacritical marks
-- Normalizes time expressions (e.g., "saat 22.00" → "saat yirmi iki sıfır")
+- Normalizes time expressions (e.g., "saat 22.00" → "saat yirmi iki")
 - Provides both a class-based API and a simple function-based API
 - Supports processing both single strings and lists of strings
 - Allows customization of which normalization steps to apply
@@ -146,13 +146,19 @@ from trnorm import normalize
 text = "Saat 22.00'de toplantımız var."
 normalized_text = normalize(text)
 print(normalized_text)
-# Output: "saat yirmi iki sıfırda toplantımız var."
+# Output: "saat yirmi ikide toplantımız var."
 
 # Normalize standalone times
 text = "13.30'da görüşeceğiz."
 normalized_text = normalize(text)
 print(normalized_text)
 # Output: "on üç buçukta görüşeceğiz."
+
+# Normalize times with minutes
+text = "Saat 10.15'te görüşelim."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "saat on on beşte görüşelim."
 ```
 
 ## Normalization Order
@@ -189,14 +195,14 @@ The time normalization feature converts time expressions to their text form befo
 
 Examples:
 
-- "saat 22.00" → "saat yirmi iki sıfır"
-- "13.30" → "on üç buçuk"
+- "saat 22.00" → "saat yirmi iki" (zero minutes are omitted)
+- "13.30" → "on üç buçuk" (half hours are converted to "buçuk")
 - "9:45" → "dokuz kırk beş"
+- "18:00" → "on sekiz" (zero minutes are omitted)
 
 The time normalization handles:
 
 - Times with "saat" prefix (e.g., "saat 22.00", "saat 9:45")
 - Standalone times (e.g., "22.00", "9:45")
 - Special case for half hours (e.g., "13.30" → "on üç buçuk")
-
-This feature is particularly useful for ASR (Automatic Speech Recognition) applications where time expressions need to be properly normalized.
+- Omitting zero minutes (e.g., "22.00" → "yirmi iki" instead of "yirmi iki sıfır")

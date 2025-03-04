@@ -14,6 +14,7 @@ def normalize_times(text):
     This function identifies and converts time expressions in various formats:
     - Standard formats: "saat 22.00", "22:30", etc.
     - Special cases: converts "hh.30" to "hh buçuk" (half past hour)
+    - Omits minutes when they are zero (e.g., "22.00" becomes "22")
     
     The function preserves the original structure of the text while ensuring that
     time expressions are properly normalized before number-to-text conversion.
@@ -48,6 +49,10 @@ def normalize_times(text):
         if minutes == "30":
             return f"{saat_prefix}{hours} buçuk"
         
+        # Omit minutes when they are zero
+        if minutes == "00":
+            return f"{saat_prefix}{hours}"
+        
         # For other times, preserve the format but mark it to prevent number-to-text conversion
         return f"{saat_prefix}{hours} {minutes}"
     
@@ -72,6 +77,10 @@ def normalize_times(text):
             # Special case for half hours
             if minutes == "30":
                 return f"{hours} buçuk"
+            
+            # Omit minutes when they are zero
+            if minutes == "00":
+                return hours
             
             # For other times, preserve the format but mark it to prevent number-to-text conversion
             return f"{hours} {minutes}"

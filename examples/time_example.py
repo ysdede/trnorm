@@ -20,10 +20,11 @@ def main():
     # Example 1: Basic time normalization
     print("Example 1: Basic time normalization")
     examples = [
-        "saat 22.00",
+        "saat 22.00",  # Zero minutes - will be omitted
         "saat 9:45",
         "13.30",
-        "7:15"
+        "7:15",
+        "08.00"        # Zero minutes - will be omitted
     ]
     
     for example in examples:
@@ -39,7 +40,8 @@ def main():
     examples = [
         "Toplantı saat 14.30'da başlayacak.",
         "Uçak 22:15'te kalkacak ve 06:45'te inecek.",
-        "Ancak 13 Nisan 2024 akşamı saat 22.00 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı."
+        "Ancak 13 Nisan 2024 akşamı saat 22.00 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı.",
+        "Toplantı saat 9.00'da başlayacak."  # Zero minutes - will be omitted
     ]
     
     for example in examples:
@@ -77,6 +79,23 @@ def main():
         print(f"Original: {example}")
         normalized = normalize(example)
         print(f"Normalized: {normalized}")
+        print()
+    
+    # Example 5: Zero minutes (new behavior)
+    print("Example 5: Zero minutes (omitted)")
+    examples = [
+        "saat 10.00",
+        "15:00",
+        "Toplantı 9.00'da başlayacak.",
+        "Saat 18.00 itibariyle tüm hazırlıklar tamamlanmış olacak."
+    ]
+    
+    for example in examples:
+        print(f"Original: {example}")
+        normalized = normalize_times(example)
+        print(f"After time normalization: {normalized}")
+        fully_normalized = normalize(example)
+        print(f"Fully normalized: {fully_normalized}")
         print()
 
 

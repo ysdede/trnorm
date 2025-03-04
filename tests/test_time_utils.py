@@ -13,10 +13,11 @@ class TestTimeNormalization(unittest.TestCase):
     def test_normalize_times_standalone(self):
         """Test the normalize_times function with standalone time patterns."""
         test_cases = [
-            ("22.00", "22 00"),
+            ("22.00", "22"),  # Zero minutes should be omitted
             ("9:45", "9 45"),
             ("13.30", "13 buçuk"),
             ("7:30", "7 buçuk"),
+            ("08.00", "08"),  # Zero minutes should be omitted
         ]
         
         for input_text, expected_output in test_cases:
@@ -27,10 +28,11 @@ class TestTimeNormalization(unittest.TestCase):
     def test_normalize_times_with_saat(self):
         """Test the normalize_times function with 'saat' prefix."""
         test_cases = [
-            ("saat 22.00", "saat 22 00"),
+            ("saat 22.00", "saat 22"),  # Zero minutes should be omitted
             ("saat 9:45", "saat 9 45"),
             ("saat 13.30", "saat 13 buçuk"),
             ("saat 7:30", "saat 7 buçuk"),
+            ("saat 08.00", "saat 08"),  # Zero minutes should be omitted
         ]
         
         for input_text, expected_output in test_cases:
@@ -51,7 +53,11 @@ class TestTimeNormalization(unittest.TestCase):
             ),
             (
                 "Ancak 13 Nisan 2024 akşamı saat 22.00 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı.",
-                "Ancak 13 Nisan 2024 akşamı saat 22 00 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı."
+                "Ancak 13 Nisan 2024 akşamı saat 22 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı."
+            ),
+            (
+                "Toplantı saat 9.00'da başlayacak.",
+                "Toplantı saat 9'da başlayacak."
             ),
         ]
         
@@ -65,7 +71,7 @@ class TestTimeNormalization(unittest.TestCase):
         test_cases = [
             (
                 "Ancak 13 Nisan 2024 akşamı saat 22.00 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı.",
-                "ancak on üç nisan iki bin yirmi dört akşamı saat yirmi iki sıfır sularında, iran devrim muhafızları, israil'i hedef alarak devasa bir füze saldırısı başlattı."
+                "ancak on üç nisan iki bin yirmi dört akşamı saat yirmi iki sularında, iran devrim muhafızları, israil'i hedef alarak devasa bir füze saldırısı başlattı."
             ),
             (
                 "Toplantı saat 14.30'da başlayacak.",
@@ -74,6 +80,10 @@ class TestTimeNormalization(unittest.TestCase):
             (
                 "Uçak 22:15'te kalkacak ve 06:45'te inecek.",
                 "uçak yirmi iki on beş'te kalkacak ve altı kırk beş'te inecek."
+            ),
+            (
+                "Toplantı saat 9.00'da başlayacak.",
+                "toplantı saat dokuz'da başlayacak."
             ),
         ]
         
