@@ -7,6 +7,8 @@ representations in Turkish.
 
 import re
 
+# TODO: 16.yy'da 
+
 # Dictionary of unit translations
 unit_translations = {
     "cc": "santilitre",
@@ -42,6 +44,7 @@ unit_translations = {
     "kcal": "kilokalori",
     "wh": "watt saat",
     "kwh": "kilowatt saat",
+    "°": "derece",
     "°c": "santigrat derece",
     "°C": "santigrat derece",
     "c°": "santigrat derece",
