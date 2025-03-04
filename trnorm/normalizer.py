@@ -172,14 +172,15 @@ def normalize(text: Union[str, List[str]],
         lowercase, remove_hats
     ]):
         custom_normalizer = TurkishNormalizer(
-            apply_number_conversion=apply_number_conversion if apply_number_conversion is not None else default_normalizer.apply_number_conversion,
             apply_ordinal_normalization=apply_ordinal_normalization if apply_ordinal_normalization is not None else default_normalizer.apply_ordinal_normalization,
-            apply_symbol_conversion=apply_symbol_conversion if apply_symbol_conversion is not None else default_normalizer.apply_symbol_conversion,
             apply_multiplication_symbol=apply_multiplication_symbol if apply_multiplication_symbol is not None else default_normalizer.apply_multiplication_symbol,
             apply_unit_normalization=apply_unit_normalization if apply_unit_normalization is not None else default_normalizer.apply_unit_normalization,
-            apply_legacy_normalization=apply_legacy_normalization if apply_legacy_normalization is not None else default_normalizer.apply_legacy_normalization,
+            apply_number_conversion=apply_number_conversion if apply_number_conversion is not None else default_normalizer.apply_number_conversion,
+            apply_symbol_conversion=apply_symbol_conversion if apply_symbol_conversion is not None else default_normalizer.apply_symbol_conversion,
             lowercase=lowercase if lowercase is not None else default_normalizer.lowercase,
-            remove_hats=remove_hats if remove_hats is not None else default_normalizer.remove_hats
+            remove_hats=remove_hats if remove_hats is not None else default_normalizer.remove_hats,
+            apply_legacy_normalization=apply_legacy_normalization if apply_legacy_normalization is not None else default_normalizer.apply_legacy_normalization,
+
         )
         return custom_normalizer.normalize(text)
     
