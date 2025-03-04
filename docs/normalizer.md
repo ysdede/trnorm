@@ -11,6 +11,7 @@ The `TurkishNormalizer` class provides a comprehensive solution for normalizing 
 - Intelligently handles multiplication symbols in dimensions (3x4 → 3 çarpı 4, 2x5x6x3 → 2 çarpı 5 çarpı 6 çarpı 3)
 - Expands unit abbreviations to their full text (cm → santimetre, kg → kilogram)
 - Handles Turkish character casing and diacritical marks
+- Normalizes time expressions (e.g., "saat 22.00" → "saat yirmi iki sıfır")
 - Provides both a class-based API and a simple function-based API
 - Supports processing both single strings and lists of strings
 - Allows customization of which normalization steps to apply
@@ -53,6 +54,7 @@ normalizer = TurkishNormalizer(
     apply_symbol_conversion=True,
     apply_multiplication_symbol=True,
     apply_unit_normalization=True,
+    apply_time_normalization=True,
     apply_legacy_normalization=False,
     lowercase=True,
     remove_hats=True
@@ -79,6 +81,7 @@ normalized_text = normalize(
     apply_symbol_conversion=False,
     apply_multiplication_symbol=False,
     apply_unit_normalization=False,
+    apply_time_normalization=False,
     lowercase=False,
     remove_hats=False
 )
@@ -134,20 +137,37 @@ print(normalized_text)
 # Output: "sıcaklık yirmi beş °c."
 ```
 
+### Handling Time Expressions
+
+```python
+from trnorm import normalize
+
+# Normalize time expressions
+text = "Saat 22.00'de toplantımız var."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "saat yirmi iki sıfırda toplantımız var."
+
+# Normalize standalone times
+text = "13.30'da görüşeceğiz."
+normalized_text = normalize(text)
+print(normalized_text)
+# Output: "on üç buçukta görüşeceğiz."
+```
+
 ## Normalization Order
 
 The normalizer applies the following steps in order:
 
-1. Preprocess dimensions (add spaces between numbers and 'x')
-2. Symbol conversion (%, $, etc. to their text representation)
-3. Multiplication symbol replacement (3x4 → 3 çarpı 4)
-4. Number to text conversion (123 → yüz yirmi üç)
-5. Ordinal normalization (1. → birinci)
-6. Unit abbreviation expansion (cm → santimetre)
-7. Character normalization (lowercase, remove hats)
-8. Legacy normalization (if enabled)
-
-This order ensures that all normalization steps work correctly together.
+1. **Preprocess dimensions**: Add spaces between numbers and 'x' in dimension expressions
+2. **Symbol conversion**: Convert symbols (%, $, etc.) to their text representation
+3. **Multiplication symbol replacement**: Replace 'x' with 'çarpı' in dimension expressions
+4. **Time expression normalization**: Convert time expressions (e.g., "saat 22.00") to their text form
+5. **Number to text conversion**: Convert numbers to their text representation
+6. **Ordinal normalization**: Convert ordinal numbers to their text representation
+7. **Unit abbreviation expansion**: Convert unit abbreviations to their full text form
+8. **Character normalization**: Apply lowercase and remove circumflex (hat) from Turkish characters
+9. **Legacy normalization**: Apply more aggressive normalization (if enabled)
 
 ## Configuration Options
 
@@ -158,6 +178,25 @@ This order ensures that all normalization steps work correctly together.
 | `apply_symbol_conversion` | bool | True | Whether to convert symbols to their text representation |
 | `apply_multiplication_symbol` | bool | True | Whether to replace multiplication symbol 'x' with 'çarpı' |
 | `apply_unit_normalization` | bool | True | Whether to expand unit abbreviations to full text |
+| `apply_time_normalization` | bool | True | Whether to normalize time expressions |
 | `apply_legacy_normalization` | bool | False | Whether to apply legacy normalization (more aggressive) |
 | `lowercase` | bool | True | Whether to convert text to lowercase |
 | `remove_hats` | bool | True | Whether to remove circumflex (hat) from Turkish characters |
+
+## Time Normalization
+
+The time normalization feature converts time expressions to their text form before applying number-to-text conversion. This ensures that time expressions are properly normalized and not misinterpreted as decimal numbers.
+
+Examples:
+
+- "saat 22.00" → "saat yirmi iki sıfır"
+- "13.30" → "on üç buçuk"
+- "9:45" → "dokuz kırk beş"
+
+The time normalization handles:
+
+- Times with "saat" prefix (e.g., "saat 22.00", "saat 9:45")
+- Standalone times (e.g., "22.00", "9:45")
+- Special case for half hours (e.g., "13.30" → "on üç buçuk")
+
+This feature is particularly useful for ASR (Automatic Speech Recognition) applications where time expressions need to be properly normalized.
