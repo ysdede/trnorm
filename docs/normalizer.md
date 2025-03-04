@@ -16,6 +16,7 @@ The `TurkishNormalizer` class provides a comprehensive solution for normalizing 
 - Supports processing both single strings and lists of strings
 - Allows customization of which normalization steps to apply
 - Handles numbers followed by commas in lists and sequences
+- Provides apostrophe handling for Turkish suffixes (e.g., "8'i" → "sekizi")
 
 ## Usage
 
@@ -180,6 +181,26 @@ print(normalized_text)
 # Output: "toplantımız on üç, on dört ve on beş mayıs tarihlerinde yapılacak."
 ```
 
+### Apostrophe Handling in Turkish Suffixes
+
+In Turkish, apostrophes are often used to separate suffixes from proper nouns or numbers. The normalizer can remove these apostrophes to create more natural text:
+
+```python
+from trnorm import normalize
+
+# Enable apostrophe handling
+text = "8'i almadım"
+normalized_text = normalize(text, apply_apostrophe_handling=True)
+print(normalized_text)
+# Output: "sekizi almadım"
+
+# More examples
+text = "İstanbul'da yaşıyorum"
+normalized_text = normalize(text, apply_apostrophe_handling=True)
+print(normalized_text)
+# Output: "istanbulda yaşıyorum"
+```
+
 ## Normalization Order
 
 The normalizer applies the following steps in order:
@@ -192,7 +213,8 @@ The normalizer applies the following steps in order:
 6. **Ordinal normalization**: Convert ordinal numbers to their text representation
 7. **Unit abbreviation expansion**: Convert unit abbreviations to their full text form
 8. **Character normalization**: Apply lowercase and remove circumflex (hat) from Turkish characters
-9. **Legacy normalization**: Apply more aggressive normalization (if enabled)
+9. **Apostrophe handling**: Remove apostrophes in Turkish suffixes
+10. **Legacy normalization**: Apply more aggressive normalization (if enabled)
 
 ## Configuration Options
 
@@ -204,6 +226,7 @@ The normalizer applies the following steps in order:
 | `apply_multiplication_symbol` | bool | True | Whether to replace multiplication symbol 'x' with 'çarpı' |
 | `apply_unit_normalization` | bool | True | Whether to expand unit abbreviations to full text |
 | `apply_time_normalization` | bool | True | Whether to normalize time expressions |
+| `apply_apostrophe_handling` | bool | False | Whether to remove apostrophes in Turkish suffixes |
 | `apply_legacy_normalization` | bool | False | Whether to apply legacy normalization (more aggressive) |
 | `lowercase` | bool | True | Whether to convert text to lowercase |
 | `remove_hats` | bool | True | Whether to remove circumflex (hat) from Turkish characters |

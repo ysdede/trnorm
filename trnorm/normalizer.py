@@ -14,6 +14,7 @@ It combines all the normalization functionalities from the trnorm package:
 - Dimension handling
 - Unit abbreviation expansion
 - Time expression handling
+- Apostrophe handling
 """
 
 from typing import List, Union, Optional
@@ -22,11 +23,12 @@ from trnorm.num_to_text import convert_numbers_to_words_wrapper, replace_multipl
 from trnorm.ordinals import normalize_ordinals
 from trnorm.roman_numerals import roman_to_arabic, find_roman_ordinals
 from trnorm.symbols import convert_symbols, default_converter
-from trnorm.legacy_normalizer import normalize_text, replace_hatted_characters
-from trnorm.text_utils import turkish_lower, sapkasiz
+from trnorm.legacy_normalizer import normalize_text, replace_hatted_characters, turkish_lower
+from trnorm.text_utils import sapkasiz
 from trnorm.dimension_utils import preprocess_dimensions, normalize_dimensions
 from trnorm.unit_utils import normalize_units
 from trnorm.time_utils import normalize_times
+from trnorm.apostrophe_handler import remove_apostrophes
 
 
 class TurkishNormalizer:
@@ -45,6 +47,7 @@ class TurkishNormalizer:
                  apply_unit_normalization: bool = True,
                  apply_time_normalization: bool = True,
                  apply_legacy_normalization: bool = False,
+                 apply_apostrophe_handling: bool = False,
                  lowercase: bool = True,
                  remove_hats: bool = True):
         """
@@ -58,6 +61,7 @@ class TurkishNormalizer:
             apply_unit_normalization (bool): Whether to expand unit abbreviations to full text
             apply_time_normalization (bool): Whether to normalize time expressions
             apply_legacy_normalization (bool): Whether to apply legacy normalization (more aggressive)
+            apply_apostrophe_handling (bool): Whether to handle apostrophes in Turkish suffixes
             lowercase (bool): Whether to convert text to lowercase
             remove_hats (bool): Whether to remove circumflex (hat) from Turkish characters
         """
@@ -68,6 +72,7 @@ class TurkishNormalizer:
         self.apply_unit_normalization = apply_unit_normalization
         self.apply_time_normalization = apply_time_normalization
         self.apply_legacy_normalization = apply_legacy_normalization
+        self.apply_apostrophe_handling = apply_apostrophe_handling
         self.lowercase = lowercase
         self.remove_hats = remove_hats
 
@@ -84,7 +89,8 @@ class TurkishNormalizer:
         6. Ordinal normalization (1. -> birinci)
         7. Unit abbreviation expansion (cm -> santimetre)
         8. Character normalization (lowercase, remove hats)
-        9. Legacy normalization (if enabled)
+        9. Apostrophe handling
+        10. Legacy normalization (if enabled)
 
         Args:
             text (Union[str, List[str]]): Input text or list of texts to normalize
@@ -134,7 +140,11 @@ class TurkishNormalizer:
         if self.lowercase:
             result = turkish_lower(result)
 
-        # 9. Legacy normalization (more aggressive, removes punctuation)
+        # 9. Apostrophe handling
+        if self.apply_apostrophe_handling:
+            result = remove_apostrophes(result)
+
+        # 10. Legacy normalization (more aggressive, removes punctuation)
         if self.apply_legacy_normalization:
             result = normalize_text(result)
 
@@ -150,9 +160,10 @@ def normalize(text: Union[str, List[str]],
               apply_ordinal_normalization: Optional[bool] = None,
               apply_symbol_conversion: Optional[bool] = None,
               apply_multiplication_symbol: Optional[bool] = None,
-              apply_unit_normalization: Optional[bool] = None,
               apply_time_normalization: Optional[bool] = None,
+              apply_unit_normalization: Optional[bool] = None,
               apply_legacy_normalization: Optional[bool] = None,
+              apply_apostrophe_handling: Optional[bool] = None,
               lowercase: Optional[bool] = None,
               remove_hats: Optional[bool] = None) -> Union[str, List[str]]:
     """
@@ -167,9 +178,10 @@ def normalize(text: Union[str, List[str]],
         apply_ordinal_normalization (Optional[bool]): Whether to normalize ordinals
         apply_symbol_conversion (Optional[bool]): Whether to convert symbols to their text representation
         apply_multiplication_symbol (Optional[bool]): Whether to replace multiplication symbol 'x' with 'çarpı'
-        apply_unit_normalization (Optional[bool]): Whether to expand unit abbreviations to full text
         apply_time_normalization (Optional[bool]): Whether to normalize time expressions
+        apply_unit_normalization (Optional[bool]): Whether to expand unit abbreviations to full text
         apply_legacy_normalization (Optional[bool]): Whether to apply legacy normalization
+        apply_apostrophe_handling (Optional[bool]): Whether to handle apostrophes in Turkish suffixes
         lowercase (Optional[bool]): Whether to convert text to lowercase
         remove_hats (Optional[bool]): Whether to remove circumflex (hat) from Turkish characters
 
@@ -181,7 +193,8 @@ def normalize(text: Union[str, List[str]],
         apply_number_conversion, apply_ordinal_normalization, 
         apply_symbol_conversion, apply_multiplication_symbol,
         apply_unit_normalization, apply_time_normalization,
-        apply_legacy_normalization, lowercase, remove_hats
+        apply_legacy_normalization, apply_apostrophe_handling,
+        lowercase, remove_hats
     ]):
         custom_normalizer = TurkishNormalizer(
             apply_ordinal_normalization=apply_ordinal_normalization if apply_ordinal_normalization is not None else default_normalizer.apply_ordinal_normalization,
@@ -190,6 +203,7 @@ def normalize(text: Union[str, List[str]],
             apply_time_normalization=apply_time_normalization if apply_time_normalization is not None else default_normalizer.apply_time_normalization,
             apply_number_conversion=apply_number_conversion if apply_number_conversion is not None else default_normalizer.apply_number_conversion,
             apply_symbol_conversion=apply_symbol_conversion if apply_symbol_conversion is not None else default_normalizer.apply_symbol_conversion,
+            apply_apostrophe_handling=apply_apostrophe_handling if apply_apostrophe_handling is not None else default_normalizer.apply_apostrophe_handling,
             lowercase=lowercase if lowercase is not None else default_normalizer.lowercase,
             remove_hats=remove_hats if remove_hats is not None else default_normalizer.remove_hats,
             apply_legacy_normalization=apply_legacy_normalization if apply_legacy_normalization is not None else default_normalizer.apply_legacy_normalization,
