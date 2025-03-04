@@ -18,11 +18,20 @@ def test_levenshtein_distance_strings():
 
 
 def test_levenshtein_distance_lists():
-    # Test with lists
-    assert levenshtein_distance(["a", "b", "c"], ["a", "b", "d"]) == 1
-    assert levenshtein_distance([], []) == 0
-    assert levenshtein_distance(["a", "b", "c"], []) == 3
-    assert levenshtein_distance([], ["a", "b", "c"]) == 3
+    # Test with lists - the function now returns a list of individual distances
+    assert levenshtein_distance(["a", "b", "c"], ["a", "b", "d"]) == [0, 0, 1]
+    assert levenshtein_distance([], []) == []
+    
+    # These tests need to be updated as we now require lists to have the same length
+    with pytest.raises(ValueError):
+        levenshtein_distance(["a", "b", "c"], [])
+    
+    with pytest.raises(ValueError):
+        levenshtein_distance([], ["a", "b", "c"])
+    
+    # Test with equal length lists
+    assert levenshtein_distance(["a", "b", "c"], ["a", "b", "c"]) == [0, 0, 0]
+    assert levenshtein_distance(["abc", "def"], ["abd", "def"]) == [1, 0]
 
 
 def test_wer():
