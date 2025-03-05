@@ -60,6 +60,73 @@ class NumberToTextConverter:
             return f"{day_words} {month_words} {year_words}"
 
         return re.sub(date_pattern, replace_with_words, text)
+        
+    def _convert_times_to_words(self, text, merge_words):
+        """
+        Convert time expressions to words before general number conversion.
+        
+        This method identifies time patterns like "saat 22.00" or "22:30" and 
+        converts them appropriately to prevent misinterpretation as decimal numbers.
+        
+        Args:
+            text (str): The input text containing time expressions
+            merge_words (bool): Whether to merge words in the output
+            
+        Returns:
+            str: The text with time expressions properly converted
+        """
+        # Pattern for times with "saat" prefix (e.g., "saat 22.00", "saat 9:45")
+        saat_pattern = r'(\bsaat\s+)(\d{1,2})([\.:])(\d{2})\b'
+        
+        def replace_saat_time(match):
+            saat_prefix = match.group(1)  # "saat "
+            hours = match.group(2)
+            separator = match.group(3)  # . or :
+            minutes = match.group(4)
+            
+            # Convert hours and minutes to words
+            hours_words = self._num_to_words(int(hours), 0, merge_words=merge_words)
+            
+            # Special case for half hours
+            if minutes == "30":
+                return f"{saat_prefix}{hours_words} buçuk"
+            
+            minutes_words = self._num_to_words(int(minutes), 0, merge_words=merge_words)
+            return f"{saat_prefix}{hours_words} {minutes_words}"
+        
+        # Process times with "saat" prefix
+        processed_text = re.sub(saat_pattern, replace_saat_time, text)
+        
+        # Pattern for standalone times that might be time expressions (e.g., "22.00", "9:45")
+        time_pattern = r'\b(\d{1,2})([\.:])(\d{2})\b'
+        
+        def is_likely_time(hours, minutes):
+            # Check if hours and minutes are valid time components
+            h = int(hours)
+            m = int(minutes)
+            return 0 <= h <= 23 and 0 <= m <= 59 and len(minutes) == 2
+        
+        def replace_standalone_time(match):
+            hours = match.group(1)
+            separator = match.group(2)
+            minutes = match.group(3)
+            
+            # Only convert if it looks like a valid time
+            if is_likely_time(hours, minutes):
+                hours_words = self._num_to_words(int(hours), 0, merge_words=merge_words)
+                
+                # Special case for half hours
+                if minutes == "30":
+                    return f"{hours_words} buçuk"
+                
+                minutes_words = self._num_to_words(int(minutes), 0, merge_words=merge_words)
+                return f"{hours_words} {minutes_words}"
+            
+            # If it doesn't look like a time, return the original text
+            return match.group(0)
+        
+        # Process standalone times
+        return re.sub(time_pattern, replace_standalone_time, processed_text)
 
     def convert_numbers_to_words(self, input_text, num_dec_digits=6, decimal_seperator=",", merge_words=False):
         """
@@ -74,6 +141,8 @@ class NumberToTextConverter:
         - Numbers with apostrophes (e.g., "100'lerce" -> "yüz'lerce")
         - Numbers with divide symbols (e.g., "7/24" -> "yedi/yirmi dört")
         - Combinations of the above (e.g., "2/3'ü" -> "iki/üç'ü")
+        - Time expressions (e.g., "saat 22.00" -> "saat yirmi iki sıfır sıfır")
+        - Date expressions (e.g., "12.05.2023" -> "on iki beş iki bin yirmi üç")
 
         Args:
             input_text (str): The input text containing numbers to be converted.
@@ -84,7 +153,15 @@ class NumberToTextConverter:
         Returns:
             str: The input text with numbers converted to their Turkish word equivalents.
         """
+        # First handle dates and times before general number conversion
         input_text = self._convert_dates_to_words(input_text, merge_words)
+        input_text = self._convert_times_to_words(input_text, merge_words)
+        
+        # Special handling for numbers followed by commas and spaces (e.g., "13, ")
+        # Replace with a special placeholder to preserve the pattern
+        comma_space_placeholder = " |COMMA_SPACE| "
+        input_text = re.sub(r'(\d+)(,\s+)', lambda m: self._int_to_words(int(m.group(1)), merge_words=merge_words) + comma_space_placeholder, input_text)
+        
         input_text = input_text.replace(", ", " |$| ")
         input_text = input_text.replace("-", " ~ ")
         input_text = input_text.replace(":", ": ")  # Ensure space after colon
@@ -185,6 +262,9 @@ class NumberToTextConverter:
         
         # Replace the divide placeholder with the original divide symbol (/)
         result = result.replace(divide_placeholder, "/")
+        
+        # Restore the comma space placeholder
+        result = result.replace(comma_space_placeholder, ", ")
         
         result = result.replace("  ", " ")  # Remove double spaces
         return result.strip()

@@ -19,11 +19,17 @@ We don't need duration and time for this task.
 
 from pathlib import Path
 from trnorm.metrics import wer, cer, levenshtein_distance, normalized_levenshtein_distance
-from trnorm.legacy_normalizer import normalize_text
-from trnorm import normalize, TurkishNormalizer
+from trnorm import normalize
+from trnorm.legacy_normalizer import normalize_text, replace_hatted_characters, turkish_lower
+from trnorm.dimension_utils import preprocess_dimensions, normalize_dimensions
+from trnorm.unit_utils import normalize_units
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.ordinals import normalize_ordinals
+from trnorm.symbols import convert_symbols
 
 log_root = r"C:\Drive\hf_cache"
-log_file = r"ysdede-yeni-split-0-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
+# log_file = r"ysdede-yeni-split-0-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
+log_file = r"erenfazlioglu-turkishvoicedataset-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
 input_file = Path(log_root, log_file)
 
 lines = []
@@ -35,6 +41,19 @@ count = 0
 our_total_wer = 0
 our_total_cer = 0
 our_total_lev_dist = 0
+
+# Define the normalization functions we want to use
+normalization_functions = [
+    preprocess_dimensions,
+    convert_symbols,
+    normalize_dimensions,
+    convert_numbers_to_words_wrapper,
+    normalize_ordinals,
+    normalize_units,
+    replace_hatted_characters,
+    turkish_lower,
+    normalize_text  # Legacy normalization (more aggressive)
+]
 
 with open(input_file, "r", encoding="utf-8") as f:
     # Read the entire file as text
@@ -74,10 +93,9 @@ with open(input_file, "r", encoding="utf-8") as f:
 
             count += 1
 
-            # ref = normalize_text(row_data["r"])
-            # hyp = normalize_text(row_data["p"])
-            ref = normalize(row_data["r"], apply_legacy_normalization=True)
-            hyp = normalize(row_data["p"], apply_legacy_normalization=True)
+            # Use the new simplified normalizer approach with direct function references
+            ref = normalize(row_data["r"], normalization_functions)
+            hyp = normalize(row_data["p"], normalization_functions)
 
             our_wer = wer(ref, hyp)
             our_cer = cer(ref, hyp)
