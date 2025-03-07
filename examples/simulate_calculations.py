@@ -17,19 +17,16 @@ Import wer and cer from evaluate module and calculate raw wer and cer scores for
 We don't need duration and time for this task.
 """
 
+import csv
 from pathlib import Path
 from trnorm.metrics import wer, cer, levenshtein_distance, normalized_levenshtein_distance
-# from trnorm import normalize
-# from trnorm.legacy_normalizer import normalize_text, replace_hatted_characters, turkish_lower
-
 from trnorm import normalize
 
 log_root = r"C:\Drive\hf_cache"
-# log_file = r"ysdede-yeni-split-0-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
-log_file = r"ysdede-commonvoice_17_tr_fixed-openai-whisper-large-v3.tsv"
+log_file = r"ysdede-commonvoice_17_tr_fixed-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
 input_file = Path(log_root, log_file)
 
-lines = []
+# Initialize counters
 total_wer = 0
 total_lev_dist = 0
 total_sim = 0
@@ -39,87 +36,118 @@ our_total_wer = 0
 our_total_cer = 0
 our_total_lev_dist = 0
 
+# Required fields for processing
+required_fields = ['r', 'p']  # Reference and prediction are essential
 
-with open(input_file, "r", encoding="utf-8") as f:
-    # Read the entire file as text
-    content = f.read()
-    
-    # Split by newline characters
-    rows = content.strip().split('\n')
-    
-    # Skip header
-    header = rows[0]
-    rows = rows[1:]
-    
-    for row in rows:
-        try:
-            # Split by tab character
-            fields = row.split('\t')
-            
-            # Make sure we have at least 7 fields
-            if len(fields) < 8:
-                print(f"Skipping row with insufficient fields: {fields}")
-                continue
+try:
+    with open(input_file, "r", encoding="utf-8") as f:
+        # Read as CSV with tab delimiter
+        reader = csv.reader(f, delimiter='\t')
+        
+        # Get header row
+        header = next(reader)
+        
+        # Create field index mapping
+        field_indices = {}
+        for i, field in enumerate(header):
+            field_indices[field.strip().lower()] = i
+        
+        # Check if required fields exist
+        missing_fields = [field for field in required_fields if field not in field_indices]
+        if missing_fields:
+            raise ValueError(f"Missing required fields in TSV: {missing_fields}")
+        
+        # Process each row
+        for row in reader:
+            try:
+                # Skip empty rows
+                if not row:
+                    continue
                 
-            # Create a new row dictionary for each line
-            row_data = {
-                "wer": float(fields[0]),
-                "cer": float(fields[1]),
-                "lev_dist": float(fields[2]),
-                "sim": float(fields[3]),
-                "dur": fields[4],
-                "time": fields[5],
-                "r": fields[6],
-                "p": fields[7]
-            }
-            
-            lines.append(row_data)
+                # Extract reference and prediction (required fields)
+                ref_text = row[field_indices['r']]
+                pred_text = row[field_indices['p']]
+                
+                # Extract other fields if they exist
+                row_data = {
+                    'r': ref_text,
+                    'p': pred_text
+                }
+                
+                # Try to get numeric fields if they exist
+                for field in ['wer', 'cer', 'lev_dist', 'sim']:
+                    if field in field_indices and field_indices[field] < len(row):
+                        try:
+                            row_data[field] = float(row[field_indices[field]])
+                        except (ValueError, TypeError):
+                            row_data[field] = None
+                
+                # If we have the original WER, add it to the total
+                if 'wer' in row_data and row_data['wer'] is not None:
+                    total_wer += row_data['wer']
+                
+                # If we have the original Levenshtein distance, add it to the total
+                if 'lev_dist' in row_data and row_data['lev_dist'] is not None:
+                    total_lev_dist += row_data['lev_dist']
+                
+                # If we have the original similarity score, add it to the total
+                if 'sim' in row_data and row_data['sim'] is not None:
+                    total_sim += row_data['sim']
+                
+                count += 1
+                
+                # Use context-aware normalization for better WER/CER calculations
+                normalized_ref = normalize(ref_text, context_text=pred_text)
+                normalized_hyp = normalize(pred_text, context_text=ref_text)
+                
+                our_wer_score = wer(normalized_ref, normalized_hyp)
+                our_cer_score = cer(normalized_ref, normalized_hyp)
+                our_lev_dist_score = normalized_levenshtein_distance(normalized_ref, normalized_hyp)
+                
+                our_total_wer += our_wer_score
+                our_total_cer += our_cer_score
+                our_total_lev_dist += our_lev_dist_score
+                
+                # Print cases where our WER is higher than the original
+                if 'wer' in row_data and row_data['wer'] is not None and round(our_wer_score * 100, 2) > row_data['wer']:
+                    print(f"{our_wer_score * 100:.2f}/{row_data['wer']:.2f} - {our_lev_dist_score:.3f}/{row_data.get('lev_dist', 'N/A')}")
+                    print(f"Reference: {ref_text}")
+                    print(f"Prediction: {pred_text}")
+                    print(f"Normalized Reference: {normalized_ref}")
+                    print(f"Normalized Hypothesis: {normalized_hyp}")
+                    print("*" * 50)
+                
+            except Exception as e:
+                print(f"Error processing row: {row[:3]}... Error: {e}")
+                continue
+    
+    # Print summary statistics
+    if count > 0:
+        # Original metrics (if available)
+        if total_wer > 0:
+            average_wer = round((total_wer / count), 2)
+            print(f"Original Average WER: {average_wer:.2f}%")
+        
+        if total_lev_dist > 0:
+            average_lev_dist = round(total_lev_dist / count, 2)
+            print(f"Original Average Levenshtein Distance: {average_lev_dist:.2f}")
+        
+        if total_sim > 0:
+            average_sim = round(total_sim / count, 2)
+            print(f"Original Average Similarity: {average_sim:.2f}")
+        
+        print(f"Processed {count} valid rows")
+        print(50 * "=")
+        
+        # Our metrics
+        our_avg_wer = (our_total_wer / count) * 100
+        our_avg_cer = (our_total_cer / count) * 100
+        our_avg_lev_dist = our_total_lev_dist / count
+        print(f"Our WER: {our_avg_wer:.2f}%")
+        print(f"Our CER: {our_avg_cer:.2f}%")
+        print(f"Our Levenshtein Distance: {our_avg_lev_dist:.3f}")
+    else:
+        print("No valid rows were processed.")
 
-            total_wer += row_data["wer"]
-            total_lev_dist += row_data["lev_dist"]
-            total_sim += row_data["sim"]
-
-            count += 1
-
-            # Use context-aware normalization for better WER/CER calculations
-            ref = normalize(row_data["r"], context_text=row_data["p"])
-            hyp = normalize(row_data["p"], context_text=row_data["r"])
-
-            our_wer = wer(ref, hyp)
-            our_cer = cer(ref, hyp)
-            our_lev_dist = normalized_levenshtein_distance(ref, hyp)
-
-            our_total_wer += our_wer
-            our_total_cer += our_cer
-            our_total_lev_dist += our_lev_dist
-            
-            if round(our_wer * 100, 2) > row_data['wer']:
-                print(f"{our_wer * 100:.2f}/{row_data['wer']:.2f} - {our_lev_dist:.3f}/{row_data['lev_dist']:.3f}")
-                print(f"{row_data['r']}")
-                print(f"{row_data['p']}")
-                print(ref)
-                print(hyp)
-                print("*" * 50)
-
-        except Exception as e:
-            print(f"Error processing row: {row[:100]}... Error: {e}")
-            continue  # Continue instead of exiting to process other rows
-
-if count > 0:
-    average_wer = round((total_wer / count), 2)
-    average_lev_dist = round(total_lev_dist / count, 2)
-    average_sim = round(total_sim / count, 2)
-    print(f"Average WER: {average_wer:.2f}%")
-    print(f"Average Levenshtein Distance: {average_lev_dist:.2f}")
-    print(f"Average Similarity: {average_sim:.2f}")
-    print(f"Processed {count} valid rows out of {len(rows)} total rows")
-    print(50 * "=")
-
-    our_avg_wer = (our_total_wer / count) * 100
-    our_avg_cer = (our_total_cer / count) * 100
-    our_lev_dist = our_total_lev_dist / count
-    print(f"Our WER: {our_avg_wer:.2f}%")
-    print(f"Our CER: {our_avg_cer:.2f}%")
-    print(f"Our levenshtein distance: {our_lev_dist:.3f}")
-else:
-    print("No valid rows were processed.")
+except Exception as e:
+    print(f"Error processing file: {e}")
