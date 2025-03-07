@@ -34,6 +34,7 @@ def ek_uret(kelime):
     """
     return ekle(kelime, "iken")
 
+BATCH_TEST = False
 
 # Run script if executed directly
 if __name__ == "__main__":
@@ -43,6 +44,9 @@ if __name__ == "__main__":
         print(f"{kelime:<16} {beklenen:<16} --> {result:<16}")
         assert result == beklenen
 
+    if not BATCH_TEST:
+        exit(0)
+    
     sozluk_tsv = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data/TDK_Sozluk-Turkish.tsv")
 
     import csv

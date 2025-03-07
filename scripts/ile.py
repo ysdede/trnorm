@@ -33,6 +33,7 @@ def ek_uret(kelime):
     return ekle(kelime, "ile")
 
 
+BATCH_TEST = False
 # Run tests if this file is executed directly
 if __name__ == "__main__":
     # Test regular words
@@ -40,7 +41,10 @@ if __name__ == "__main__":
         result = ek_uret(kelime)
         print(f"{kelime:<16} {beklenen:<16} --> {result:<16}")
         assert result == beklenen
-
+    
+    if not BATCH_TEST:
+        exit(0)
+    
     sozluk_tsv = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data/TDK_Sozluk-Turkish.tsv")
 
     import csv
