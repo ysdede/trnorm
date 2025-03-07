@@ -28,7 +28,7 @@ my_pipeline = [
     normalize_ordinals,     # Moved before remove_apostrophes to preserve apostrophes in ordinals
     convert_symbols,
     convert_numbers_to_words_wrapper,
-    merge_suffixes,         # Add suffix handler to merge Turkish suffixes
+    # merge_suffixes,         # Add suffix handler to merge Turkish suffixes
     remove_apostrophes,
     sapkasiz,
     preprocess_dimensions,
@@ -46,53 +46,53 @@ def apply_normalizers(text):
         text = norm(text)
     return text
 
+if __name__ == "__main__":
+    example_texts = [
+        "Turner'ın 'Köle Gemisi' isimli tablosuna bakıyoruz.",
+        "Odanın boyutları 2x3x4 metre.",
+        "Halının boyutu 120x180cm.",
+        "Ağırlığı 5 kg. ve uzunluğu 10 metre.",
+        "Sıcaklık 25 °C ve nem %60.",
+        "Saat 14:30'da %25 indirimli ürünler satışa çıkacak.",
+        "Ürün fiyatı 1.250,75 TL'dir.",
+        "1. sınıfta 23 öğrenci var.",
+        "Dün 3x4 metre halı aldım.",
+        "II. Wilhelm, Almanya imparatoruydu.",
+        "V. Karl, Kutsal Roma İmparatoru'ydu.",
+        "1'inci sınıf 1inci kat",
+        "2. Mahmud ya da II. Mahmud.",
+        "1.000 ₺",
+        "$500",
+        "600 $",
+        "kâğıt ve kalem",
+        "Âdem ile Havva",
+        "îmanın kimde",
+        "Îman büyük harfle şapkalı",
+        "hûr ne",
+        "Yavru ile kâtip",
+        "Python 2.7 - 2.4 ASA - Pi sayısı 3.14",
+        "Bu kitap 1990'ların en iyi eserleri arasında.",
+        "Toros ile hamile",
+        "Hayat sana limon verdi ise limonata yap",
+        "Hâl böyle iken böyle dedi adam."
+    ]
 
-example_texts = [
-    "Turner'ın 'Köle Gemisi' isimli tablosuna bakıyoruz.",
-    "Odanın boyutları 2x3x4 metre.",
-    "Halının boyutu 120x180cm.",
-    "Ağırlığı 5 kg. ve uzunluğu 10 metre.",
-    "Sıcaklık 25 °C ve nem %60.",
-    "Saat 14:30'da %25 indirimli ürünler satışa çıkacak.",
-    "Ürün fiyatı 1.250,75 TL'dir.",
-    "1. sınıfta 23 öğrenci var.",
-    "Dün 3x4 metre halı aldım.",
-    "II. Wilhelm, Almanya imparatoruydu.",
-    "V. Karl, Kutsal Roma İmparatoru'ydu.",
-    "1'inci sınıf 1inci kat",
-    "2. Mahmud ya da II. Mahmud.",
-    "1.000 ₺",
-    "$500",
-    "600 $",
-    "kâğıt ve kalem",
-    "Âdem ile Havva",
-    "îmanın kimde",
-    "Îman büyük harfle şapkalı",
-    "hûr ne",
-    "Yavru ile kâtip",
-    "Python 2.7 - 2.4 ASA - Pi sayısı 3.14",
-    "Bu kitap 1990'ların en iyi eserleri arasında.",
-    "Toros ile hamile",
-    "Hayat sana limon verdi ise limonata yap",
-    "Hâl böyle iken böyle dedi adam."
-]
+    # Test for just ordinals
+    print("\n\n--- Testing just ordinals ---")
+    ordinal_tests = [
+        "1'inci sınıf 1inci kat",
+        "2. Mahmud ya da II. Mahmud.",
+        "1. sınıfta 23 öğrenci var.",
+        "V. Karl, Kutsal Roma İmparatoru'ydu.",
+    ]
 
-# Test for just ordinals
-print("\n\n--- Testing just ordinals ---")
-ordinal_tests = [
-    "1'inci sınıf 1inci kat",
-    "2. Mahmud ya da II. Mahmud.",
-    "1. sınıfta 23 öğrenci var.",
-    "V. Karl, Kutsal Roma İmparatoru'ydu.",
-]
+    # Test with just ordinals normalizer
+    for e in ordinal_tests:
+        print(f"Original: {e}")
+        print(f"Normalized: {normalize_ordinals(e)}")
+        print()
 
-# Test with just ordinals normalizer
-for e in ordinal_tests:
-    print(f"Original: {e}")
-    print(f"Normalized: {normalize_ordinals(e)}")
-    print()
-
-# Full pipeline test
-print("\n--- Testing full pipeline ---")
-for e in example_texts:
-    print(apply_normalizers(e))
+    # Full pipeline test
+    print("\n--- Testing full pipeline ---")
+    for e in example_texts:
+        print(apply_normalizers(e))
