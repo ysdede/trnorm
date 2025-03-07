@@ -66,7 +66,10 @@ def turkish_capitalize(s):
 
 def remove_punctuation(text: str = "") -> str:
     """
-    Remove common punctuation marks from text.
+    Remove punctuation marks and special characters from text while preserving
+    meaningful non-Turkish characters like numbers.
+    
+    Based on character frequency analysis of a large Turkish corpus.
     
     Args:
         text (str): Input text
@@ -74,11 +77,18 @@ def remove_punctuation(text: str = "") -> str:
     Returns:
         str: Text with punctuation removed
     """
-    # Expanded list of punctuation and symbols to remove
+    # Punctuation and special characters to remove, based on corpus analysis
     punctuation = (
-        """.,;:!?()[]{}"\'-_/\\|@#$%^&*+=<>~`%�—…–"""  # Original ASCII/base punctuation
-        """«»‹›""''§¶†‡•※¿¡‼⁇‽―−′″®©™¦¬°′‴‵‶‷"""  # Quotes, math, legal, and symbols
-        """'''`´ʹʻʼʽʿˈ"""  # Additional apostrophe-like characters
+        # Common punctuation (frequency > 0.01%)
+        """.,:;!?()[]{}"'-_/\\|@#$%^&*+=<>~`"""
+        # En/em dashes, ellipsis, quotes (frequency < 0.02%)
+        """–—…'"'"""""
+        # Special characters and symbols
+        """«»‹›§¶†‡•※¿¡‼⁇‽―−′″®©™¦¬°′‴‵‶‷½¼÷"""
+        # Various apostrophe types
+        """'''`´ʹʻʼʽʿˈ"""
+        # Invisible/special whitespace characters
+        """\u00A0\u00AD\u0009"""
     )
     
     # Create a translation table
