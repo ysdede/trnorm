@@ -41,7 +41,8 @@ def main():
         "Toplantı saat 14.30'da başlayacak.",
         "Uçak 22:15'te kalkacak ve 06:45'te inecek.",
         "Ancak 13 Nisan 2024 akşamı saat 22.00 sularında, İran Devrim Muhafızları, İsrail'i hedef alarak devasa bir füze saldırısı başlattı.",
-        "Toplantı saat 9.00'da başlayacak."  # Zero minutes - will be omitted
+        "Toplantı saat 9.00'da başlayacak.",  # Zero minutes - will be omitted
+        "Saat 14:30'da %25 indirimli ürünler satışa çıkacak.",
     ]
     
     for example in examples:
@@ -58,12 +59,15 @@ def main():
     
     print(f"Original: {example}")
     
+    # Import necessary converters
+    from trnorm.num_to_text import convert_numbers_to_words_wrapper
+    
     # Without time normalization (will interpret 22.00 as a decimal number)
-    without_time_norm = normalize(example, apply_time_normalization=False)
+    without_time_norm = normalize(example, converters=[convert_numbers_to_words_wrapper])
     print(f"Without time normalization: {without_time_norm}")
     
     # With time normalization (will correctly handle 22.00 as a time)
-    with_time_norm = normalize(example)
+    with_time_norm = normalize(example, converters=[normalize_times, convert_numbers_to_words_wrapper])
     print(f"With time normalization: {with_time_norm}")
     print()
     
@@ -77,7 +81,7 @@ def main():
     
     for example in examples:
         print(f"Original: {example}")
-        normalized = normalize(example)
+        normalized = normalize(example, converters=[normalize_times])
         print(f"Normalized: {normalized}")
         print()
     
