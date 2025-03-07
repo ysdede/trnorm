@@ -22,6 +22,7 @@ from trnorm.text_utils import (
 )
 from trnorm.time_utils import normalize_times
 from trnorm.suffix_handler import merge_suffixes
+from trnorm.alphanumeric import normalize_alphanumeric
 
 # Create a wrapper for normalize_ordinals with Roman ordinals conversion enabled for testing
 def normalize_ordinals_with_roman(text):
@@ -29,6 +30,7 @@ def normalize_ordinals_with_roman(text):
 
 my_pipeline = [
     normalize_times,
+    normalize_alphanumeric,  # Add alphanumeric handling to separate patterns like F3, B1
     normalize_ordinals,
     convert_symbols,
     convert_numbers_to_words_wrapper,

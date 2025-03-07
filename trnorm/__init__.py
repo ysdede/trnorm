@@ -12,6 +12,7 @@ This package provides tools for normalizing Turkish text, including:
 - Legacy normalizer for backward compatibility
 - Simple normalizer that applies a list of conversion functions in sequence
 - Utilities for handling dimensions and multiplication symbols
+- Handling alphanumeric patterns (e.g., F3, B1) by separating letters and numbers
 """
 
 __version__ = "0.1.0"
@@ -38,6 +39,7 @@ from .text_utils import (
 from .normalizer import normalize
 from .dimension_utils import preprocess_dimensions, normalize_dimensions
 from .unit_utils import normalize_units
+from .alphanumeric import separate_alphanumeric, normalize_alphanumeric
 
 __all__ = [
     "NumberToTextConverter",
@@ -73,4 +75,6 @@ __all__ = [
     "preprocess_dimensions",
     "normalize_dimensions",
     "normalize_units",
+    "separate_alphanumeric",
+    "normalize_alphanumeric",
 ]
