@@ -55,7 +55,7 @@ example_texts = [
     "II. Wilhelm, Almanya imparatoruydu.",
     "V. Karl, Kutsal Roma İmparatoru'ydu.",
     "1'inci sınıf 1inci kat",
-    "2. Mahmud ya da II. Mahmud. BUG",
+    "2. Mahmud ya da II. Mahmud.",
     "1.000 ₺",
     "$500",
     "600 $",
@@ -65,6 +65,9 @@ example_texts = [
     "Îman büyük harfle şapkalı",
     "hûr ne",
     "Yavru ile kâtip",
+    "Python 2.7",
+    "2.4 ASA",
+    "Pi sayısı 3.14"
 ]
 
 # Test for just ordinals

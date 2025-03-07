@@ -128,6 +128,45 @@ class NumberToTextConverter:
         # Process standalone times
         return re.sub(time_pattern, replace_standalone_time, processed_text)
 
+    def _is_ordinal_or_non_standard_number(self, word):
+        """
+        Check if a number is an ordinal (ends with period) or has a non-standard format 
+        that should not be converted to text.
+        
+        Non-standard formats to skip (return True):
+        - Numbers ending with a period: 2., 10., etc. (ordinals)
+        - Numbers with period as decimal separator: 3.1, 10.5, 2.14, etc.
+        - Numbers with incorrect thousand separator pattern: 1.0, 10.5, etc.
+        
+        Args:
+            word (str): The word to check
+            
+        Returns:
+            bool: True if it's an ordinal or non-standard number, False otherwise
+        """
+        # Skip if it's not a numeric string
+        if not any(char.isdigit() for char in word):
+            return False
+            
+        # Check for numbers ending with a period (ordinals)
+        if re.match(r'^\d+\.$', word):
+            return True
+            
+        # Check for numbers with period as decimal separator
+        # This pattern matches numbers like 3.1, 10.5, 2.14, etc.
+        # But we need to exclude properly formatted Turkish numbers with thousand separators
+        if '.' in word and ',' not in word:
+            # If it's a properly formatted Turkish number with thousand separators
+            # like 1.000, 10.000, 100.000, 1.000.000, etc., don't skip it
+            if re.match(r'^\d{1,3}(\.\d{3})+$', word):
+                return False
+                
+            # If it has a period but doesn't match the thousand separator pattern,
+            # it's likely a non-standard format (like 3.1, 10.5, etc.)
+            return True
+                
+        return False
+
     def convert_numbers_to_words(self, input_text, num_dec_digits=6, decimal_seperator=",", merge_words=False):
         """
         Convert numeric strings into their Turkish text representation.
@@ -191,12 +230,36 @@ class NumberToTextConverter:
         # Handle thousand separators (periods) and decimal separators
         words = []
         for word in input_text.split():
+            # Special case for numbers with apostrophes and thousand separators
+            if "'" in word and re.match(r'^\d{1,3}(\.\d{3})+\'', word):
+                parts = word.split("'", 1)
+                number_part = parts[0]
+                suffix_part = "'" + parts[1] if len(parts) > 1 else ""
+                
+                try:
+                    num = int(number_part.replace(".", ""))
+                    converted_number = self._int_to_words(num, merge_words=merge_words)
+                    words.append(converted_number + suffix_part)
+                    continue
+                except ValueError:
+                    pass
+            
+            # Skip conversion if the number is an ordinal or has a non-standard format
+            if self._is_ordinal_or_non_standard_number(word):
+                words.append(word)
+                continue
+                
             # Check if the word contains an apostrophe with a number before it
             if "'" in word and any(char.isnumeric() for char in word.split("'")[0]):
                 # Split by apostrophe
                 parts = word.split("'", 1)  # Split only on the first apostrophe
                 number_part = parts[0]
                 suffix_part = "'" + parts[1] if len(parts) > 1 else ""
+                
+                # Skip conversion if the number part is an ordinal or has a non-standard format
+                if self._is_ordinal_or_non_standard_number(number_part):
+                    words.append(word)
+                    continue
                 
                 converted_number = number_part
                 if any(char.isnumeric() for char in number_part):
