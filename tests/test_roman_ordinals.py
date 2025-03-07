@@ -72,22 +72,34 @@ class TestRomanOrdinalNormalization(unittest.TestCase):
             ("VIII. Edward", "sekizinci Edward")
         ]
         
+        # Test with Roman ordinals conversion explicitly enabled
         for input_text, expected in test_cases:
-            self.assertEqual(normalize_ordinals(input_text), expected, 
-                             f"Failed to normalize: {input_text}")
+            self.assertEqual(normalize_ordinals(input_text, convert_roman_ordinals=True), expected, 
+                             f"Failed to normalize with Roman ordinals enabled: {input_text}")
+            
+        # Test with default behavior (Roman ordinals conversion disabled)
+        for input_text, _ in test_cases:
+            self.assertEqual(normalize_ordinals(input_text), input_text, 
+                             f"Should not normalize Roman ordinals by default: {input_text}")
     
     def test_mixed_ordinals(self):
         """Test normalization of text containing both Arabic and Roman ordinals."""
         input_text = "3. sınıf öğrencileri ve II. Dünya Savaşı hakkında 20. yüzyılın en önemli olaylarından biri olan V. büyük savaş."
-        expected = "üçüncü sınıf öğrencileri ve ikinci Dünya Savaşı hakkında yirminci yüzyılın en önemli olaylarından biri olan beşinci büyük savaş."
+        expected_with_roman = "üçüncü sınıf öğrencileri ve ikinci Dünya Savaşı hakkında yirminci yüzyılın en önemli olaylarından biri olan beşinci büyük savaş."
+        expected_without_roman = "üçüncü sınıf öğrencileri ve II. Dünya Savaşı hakkında yirminci yüzyılın en önemli olaylarından biri olan V. büyük savaş."
         
-        self.assertEqual(normalize_ordinals(input_text), expected)
+        # Test with Roman ordinals conversion explicitly enabled
+        self.assertEqual(normalize_ordinals(input_text, convert_roman_ordinals=True), expected_with_roman)
+        
+        # Test with default behavior (Roman ordinals conversion disabled)
+        self.assertEqual(normalize_ordinals(input_text), expected_without_roman)
     
     def test_roman_numerals_without_period(self):
         """Test that Roman numerals without a period are not normalized."""
         input_text = "Roma rakamları I, V, X, L, C, D ve M harflerinden oluşur."
         # Should remain unchanged
         self.assertEqual(normalize_ordinals(input_text), input_text)
+        self.assertEqual(normalize_ordinals(input_text, convert_roman_ordinals=True), input_text)
 
 
 if __name__ == "__main__":

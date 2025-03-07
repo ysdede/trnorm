@@ -13,8 +13,8 @@ This package is specifically created for fairer ASR benchmarking, not as a compr
 ## Features
 
 - **Number to Text Conversion**: Convert numeric values to their Turkish text representation
-- **Ordinal Number Normalization**: Convert ordinal numbers (including Roman numerals) to their Turkish text representation
-- **Roman Numeral Processing**: Convert Roman numerals to Arabic numbers and normalize Roman ordinals in text
+- **Ordinal Number Normalization**: Convert ordinal numbers to their Turkish text representation
+- **Roman Numeral Processing**: Convert Roman numerals to Arabic numbers and optionally normalize Roman ordinals in text
 - **Symbol Conversion**: Convert special symbols (like %, €, $) to their text representation
 - **Turkish Suffix Handling**: Add Turkish suffixes (ile, ise, iken) to words following vowel harmony rules
 - **Text Utilities**: Various text utility functions for Turkish language processing
@@ -64,16 +64,21 @@ text = "1. sırada 2'nci kişi ve 3'üncü grup"
 normalized = normalize_ordinals(text)
 print(normalized)  # "birinci sırada ikinci kişi ve üçüncü grup"
 
-# Roman ordinals
+# Roman ordinals (disabled by default)
 text = "XX. yüzyılda II. Dünya Savaşı yaşandı."
+# Default behavior - Roman ordinals are not converted
 normalized = normalize_ordinals(text)
+print(normalized)  # "XX. yüzyılda II. Dünya Savaşı yaşandı."
+
+# Enable Roman ordinals conversion
+normalized = normalize_ordinals(text, convert_roman_ordinals=True)
 print(normalized)  # "yirminci yüzyılda ikinci Dünya Savaşı yaşandı."
 ```
 
 ### Roman Numeral Processing
 
 ```python
-from trnorm import roman_to_arabic, is_roman_numeral
+from trnorm import roman_to_arabic, is_roman_numeral, find_roman_ordinals
 
 # Convert Roman numerals to Arabic numbers
 print(roman_to_arabic("XIV"))  # 14
@@ -82,6 +87,11 @@ print(roman_to_arabic("MCMXCIX"))  # 1999
 # Check if a string is a valid Roman numeral
 print(is_roman_numeral("XIV"))  # True
 print(is_roman_numeral("ABC"))  # False
+
+# Find Roman ordinals in text
+text = "XX. yüzyılda II. Dünya Savaşı yaşandı."
+ordinals = find_roman_ordinals(text)
+print(ordinals)  # [('XX', 'yüzyılda', 0), ('II', 'Dünya', 12)]
 ```
 
 ### Symbol Conversion

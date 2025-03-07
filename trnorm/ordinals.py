@@ -219,12 +219,13 @@ def is_bullet_point(line):
     return False
 
 # Normalize text with compiled regex patterns
-def normalize_ordinals(text):
+def normalize_ordinals(text, convert_roman_ordinals=False):
     """
     Normalize ordinals in text to their textual representation.
     
     Args:
         text: The input text containing ordinals
+        convert_roman_ordinals: Whether to convert Roman ordinals (default: False)
         
     Returns:
         Text with normalized ordinals
@@ -286,7 +287,11 @@ def normalize_ordinals(text):
         else:
             # Apply transformations in sequence to each line
             line = re.sub(seq_pattern, seq_repl, line)
-            line = re.sub(ROMAN_ORDINAL_PATTERN, roman_ordinal_repl, line)  # Process Roman ordinals first
+            
+            # Only convert Roman ordinals if the parameter is True
+            if convert_roman_ordinals:
+                line = re.sub(ROMAN_ORDINAL_PATTERN, roman_ordinal_repl, line)  # Process Roman ordinals first
+                
             line = re.sub(context_ordinal, context_repl, line)
             line = re.sub(standalone_ordinal, standalone_repl, line)
             line = re.sub(ordinal_pattern, ordinal_repl, line)
