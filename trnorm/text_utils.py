@@ -64,6 +64,25 @@ def turkish_capitalize(s):
         return s
     return turkish_upper(s[0]) + s[1:]
 
+def remove_punctuation(text: str = "") -> str:
+    """
+    Remove common punctuation marks from text.
+    
+    Args:
+        text (str): Input text
+        
+    Returns:
+        str: Text with punctuation removed
+    """
+    # Define punctuation to remove - customize this list as needed
+    punctuation = r'.,;:!?()[]{}"\'-_/\\|@#$%^&*+=<>~`'
+    
+    # Create a translation table
+    translator = str.maketrans('', '', punctuation)
+    
+    # Apply translation
+    return text.translate(translator)
+
 def ekle(kelime: str = "", ek: str = ""):
     ekler = ["ile", "ise", "iken"]
 

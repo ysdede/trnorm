@@ -18,6 +18,7 @@ from trnorm.text_utils import (
     turkish_capitalize,
     is_turkish_upper,
     sapkasiz,
+    remove_punctuation,
 )
 from trnorm.time_utils import normalize_times
 from trnorm.suffix_handler import merge_suffixes
@@ -35,8 +36,9 @@ my_pipeline = [
     normalize_units,       # converts units like "cm" has been expanded to "santimetre",
                                 # "kg" has been expanded to "kilogram"
                                 # "°C" has been expanded to "santigrat derece"
-    
-    
+    turkish_lower,
+    sapkasiz,
+    remove_punctuation     # Remove punctuation marks
 ]
 
 def apply_normalizers(text):
