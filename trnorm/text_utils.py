@@ -69,18 +69,28 @@ def remove_punctuation(text: str = "") -> str:
     Remove punctuation marks and special characters from text while preserving
     meaningful non-Turkish characters like numbers.
     
+    Separator characters like hyphens and slashes are replaced with spaces
+    instead of being removed to preserve word boundaries.
+    
     Based on character frequency analysis of a large Turkish corpus.
     
     Args:
         text (str): Input text
         
     Returns:
-        str: Text with punctuation removed
+        str: Text with punctuation removed and separators replaced with spaces
     """
+    # Separator characters to replace with spaces
+    separators = "-/|."
+    
+    # Replace separators with spaces
+    for sep in separators:
+        text = text.replace(sep, " ")
+    
     # Punctuation and special characters to remove, based on corpus analysis
     punctuation = (
         # Common punctuation (frequency > 0.01%)
-        """.,:;!?()[]{}"'-_/\\|@#$%^&*+=<>~`"""
+        """.,;:!?()[]{}"'_\\@#$%^&*+=<>~`"""
         # En/em dashes, ellipsis, quotes (frequency < 0.02%)
         """–—…'"'"""""
         # Special characters and symbols
@@ -95,7 +105,10 @@ def remove_punctuation(text: str = "") -> str:
     translator = str.maketrans('', '', punctuation)
     
     # Apply translation
-    return text.translate(translator)
+    result = text.translate(translator)
+    
+    # Remove multiple spaces
+    return ' '.join(result.split())
 
 def ekle(kelime: str = "", ek: str = ""):
     ekler = ["ile", "ise", "iken"]
