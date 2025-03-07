@@ -22,7 +22,7 @@ from trnorm.metrics import wer, cer, levenshtein_distance, normalized_levenshtei
 # from trnorm import normalize
 # from trnorm.legacy_normalizer import normalize_text, replace_hatted_characters, turkish_lower
 
-from pipeline_test import apply_normalizers
+from trnorm import normalize
 
 log_root = r"C:\Drive\hf_cache"
 # log_file = r"ysdede-yeni-split-0-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
@@ -82,8 +82,8 @@ with open(input_file, "r", encoding="utf-8") as f:
             count += 1
 
             # Use the new simplified normalizer approach with direct function references
-            ref = apply_normalizers(row_data["r"])
-            hyp = apply_normalizers(row_data["p"])
+            ref = normalize(row_data["r"])
+            hyp = normalize(row_data["p"])
 
             our_wer = wer(ref, hyp)
             our_cer = cer(ref, hyp)
