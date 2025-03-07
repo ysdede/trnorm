@@ -81,9 +81,9 @@ with open(input_file, "r", encoding="utf-8") as f:
 
             count += 1
 
-            # Use the new simplified normalizer approach with direct function references
-            ref = normalize(row_data["r"])
-            hyp = normalize(row_data["p"])
+            # Use context-aware normalization for better WER/CER calculations
+            ref = normalize(row_data["r"], context_text=row_data["p"])
+            hyp = normalize(row_data["p"], context_text=row_data["r"])
 
             our_wer = wer(ref, hyp)
             our_cer = cer(ref, hyp)

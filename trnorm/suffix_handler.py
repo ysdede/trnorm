@@ -16,9 +16,9 @@ Examples:
 """
 
 import re
-from typing import Union, List
+from typing import Union, List, Optional, Dict
 
-from trnorm.text_utils import ekle
+from trnorm.text_utils import ekle, turkish_lower
 
 
 def merge_suffixes(text: Union[str, List[str]]) -> Union[str, List[str]]:
@@ -44,6 +44,100 @@ def merge_suffixes(text: Union[str, List[str]]) -> Union[str, List[str]]:
     text = _process_suffix(text, "iken")
     
     return text
+
+
+def context_aware_merge_suffixes(text: Union[str, List[str]], 
+                                context_text: Optional[Union[str, List[str]]] = None) -> Union[str, List[str]]:
+    """
+    Context-aware version of merge_suffixes that compares suffixes in both texts.
+    
+    This function identifies the Turkish suffixes "ile", "ise", and "iken" in text
+    and merges them with their preceding words according to Turkish grammar rules.
+    If context_text is provided, it will skip merging suffixes if both texts have
+    the same pattern of suffixes (same number and type).
+    
+    Args:
+        text (Union[str, List[str]]): A string or list of strings to process
+        context_text (Optional[Union[str, List[str]]]): Optional secondary text to compare
+            suffix patterns with (e.g., reference text when normalizing hypothesis)
+        
+    Returns:
+        Union[str, List[str]]: The processed text with suffixes merged (or preserved if matching context)
+    """
+    # Handle list input recursively
+    if isinstance(text, list):
+        if context_text is not None and isinstance(context_text, list):
+            # If both are lists, process each pair
+            if len(text) == len(context_text):
+                return [context_aware_merge_suffixes(item, ctx) 
+                        for item, ctx in zip(text, context_text)]
+            else:
+                # If lengths don't match, ignore context
+                return [context_aware_merge_suffixes(item) for item in text]
+        else:
+            # If only text is a list, process each item with the same context
+            return [context_aware_merge_suffixes(item, context_text) for item in text]
+    
+    # If no context is provided, fall back to regular merge_suffixes
+    if context_text is None:
+        return merge_suffixes(text)
+    
+    # Count suffixes in both texts
+    text_suffixes = _count_suffixes(text)
+    context_suffixes = _count_suffixes(context_text)
+    
+    # Compare suffix patterns
+    if _suffixes_match(text_suffixes, context_suffixes):
+        # If patterns match, preserve suffixes (don't merge)
+        return text
+    else:
+        # If patterns don't match, proceed with regular merging
+        return merge_suffixes(text)
+
+
+def _count_suffixes(text: str) -> Dict[str, int]:
+    """
+    Count occurrences of each suffix type in the text.
+    
+    Args:
+        text (str): The text to analyze
+        
+    Returns:
+        Dict[str, int]: Dictionary with suffix types as keys and counts as values
+    """
+    suffixes = {"ile": 0, "ise": 0, "iken": 0}
+    
+    # Convert to lowercase using turkish_lower for proper handling of Turkish characters
+    text = turkish_lower(text)
+    
+    # Split by whitespace and common punctuation
+    # This regex splits on spaces, commas, semicolons, question marks, etc.
+    words = re.split(r'[\s,.;:?!]+', text)
+    
+    # Filter out empty strings that might result from the split
+    words = [word for word in words if word]
+    
+    for suffix in suffixes:
+        suffixes[suffix] = words.count(suffix)
+    
+    return suffixes
+
+
+def _suffixes_match(suffixes1: Dict[str, int], suffixes2: Dict[str, int]) -> bool:
+    """
+    Check if two suffix count dictionaries match.
+    
+    Args:
+        suffixes1 (Dict[str, int]): First suffix count dictionary
+        suffixes2 (Dict[str, int]): Second suffix count dictionary
+        
+    Returns:
+        bool: True if both dictionaries have the same counts for all suffixes
+    """
+    for suffix, count in suffixes1.items():
+        if count != suffixes2.get(suffix, 0):
+            return False
+    return True
 
 
 def _process_suffix(text: str, suffix: str) -> str:
