@@ -13,8 +13,13 @@ def remove_apostrophes(text):
     Returns:
         str: Text with apostrophes removed
     """
+    # Strip single/double quotes at the beginning and end
+    text = text.strip('"').strip("'")
+
     # Handle apostrophes with spaces
     result = text.replace(" '", " ").replace("' ", " ")
+
+    result = result.replace(' "', ' ').replace('" ', ' ')
     
     # Handle apostrophes without spaces (like in Turkish suffixes)
     result = result.replace("'", "")

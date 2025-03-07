@@ -11,6 +11,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from trnorm.dimension_utils import preprocess_dimensions, normalize_dimensions
 from trnorm.unit_utils import normalize_units
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.legacy_normalizer import turkish_lower
 from trnorm import normalize
 
 
@@ -118,7 +120,7 @@ class TestDimensionUtils(unittest.TestCase):
                 self.assertEqual(normalize_units(input_text), expected_output)
 
     def test_normalizer_integration(self):
-        """Test the integration with the TurkishNormalizer."""
+        """Test the integration with the normalizer."""
         test_cases = [
             # Basic dimensions
             ("2x3", "iki çarpı üç"),
@@ -151,9 +153,19 @@ class TestDimensionUtils(unittest.TestCase):
             ("Ağırlığı 5 kg. ve uzunluğu 10 m.", "ağırlığı beş kilogram. ve uzunluğu on metre."),
         ]
         
+        # Create a list of converters for full normalization
+        converters = [
+            preprocess_dimensions,
+            normalize_dimensions,
+            normalize_units,
+            convert_numbers_to_words_wrapper,
+            turkish_lower
+        ]
+        
         for input_text, expected_output in test_cases:
             with self.subTest(input_text=input_text):
-                self.assertEqual(normalize(input_text), expected_output)
+                result = normalize(input_text, converters)
+                self.assertEqual(result, expected_output)
 
 
 if __name__ == "__main__":
