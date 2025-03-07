@@ -29,7 +29,7 @@ def normalize_ordinals_with_roman(text):
 
 my_pipeline = [
     normalize_times,
-    normalize_ordinals_with_roman,  # Use the wrapper with Roman ordinals enabled for testing
+    normalize_ordinals,
     convert_symbols,
     convert_numbers_to_words_wrapper,
     # merge_suffixes,         # Add suffix handler to merge Turkish suffixes
