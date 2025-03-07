@@ -25,6 +25,8 @@ from trnorm.symbol_mappings import get_all_mappings
 my_pipeline = [
     normalize_times,
     normalize_ordinals,     # Moved before remove_apostrophes to preserve apostrophes in ordinals
+    convert_symbols,
+    convert_numbers_to_words_wrapper,
     remove_apostrophes,
     sapkasiz,
     preprocess_dimensions,
@@ -32,8 +34,8 @@ my_pipeline = [
     normalize_units,       # converts units like "cm" has been expanded to "santimetre",
                                 # "kg" has been expanded to "kilogram"
                                 # "°C" has been expanded to "santigrat derece"
-    convert_symbols,
-    convert_numbers_to_words_wrapper,
+    
+    
 ]
 
 def apply_normalizers(text):
@@ -65,9 +67,8 @@ example_texts = [
     "Îman büyük harfle şapkalı",
     "hûr ne",
     "Yavru ile kâtip",
-    "Python 2.7",
-    "2.4 ASA",
-    "Pi sayısı 3.14"
+    "Python 2.7 - 2.4 ASA - Pi sayısı 3.14",
+    "Bu kitap 1990'ların en iyi eserleri arasında."
 ]
 
 # Test for just ordinals
