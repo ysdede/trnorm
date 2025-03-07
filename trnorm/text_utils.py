@@ -75,7 +75,8 @@ def remove_punctuation(text: str = "") -> str:
         str: Text with punctuation removed
     """
     # Define punctuation to remove - customize this list as needed
-    punctuation = r'.,;:!?()[]{}"\'-_/\\|@#$%^&*+=<>~`'
+    # Includes standard punctuation, various apostrophe types, quotes, and special characters
+    punctuation = r'.,;:!?()[]{}"\'-_/\\|@#$%^&*+=<>~`%�—…–''`´ʹʻʼʽʿˈ'
     
     # Create a translation table
     translator = str.maketrans('', '', punctuation)
