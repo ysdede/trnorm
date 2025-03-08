@@ -25,9 +25,11 @@ ROMAN_VALUES = {
 # - Subtractive combinations are limited to specific pairs (IV, IX, XL, XC, CD, CM)
 ROMAN_PATTERN = re.compile(r'^(?=[IVXLCDM])M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$')
 
-# Pattern to match Roman numerals followed by a period in text
+# Pattern to match Roman numerals using only I, V, X (up to 39) followed by a period in text
 # This is used to identify potential ordinal Roman numerals
-ROMAN_ORDINAL_PATTERN = re.compile(r'\b([IVXLCDM]+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
+# Limited to common use cases in Turkish text (typically up to 39/XXXIX)
+# This prevents incorrect conversion of initials like "D." in names like "Mehmet D."
+ROMAN_ORDINAL_PATTERN = re.compile(r'\b([IVX]+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
 
 
 def is_roman_numeral(s):

@@ -3,27 +3,23 @@ We have the following ASR log:
 tab seperated csv file with cols:
 wer: WER metric
 lev_dist: Levenshtein distance
-sim: Similarity score
-dur: Input audio duration
-time: Inference time
-r: Reference ground-truth sentence
-p: Predicted sentence
-
-Sample:
-wer     lev_dist	sim	    dur	    time	r	                                                p
-40.00	0.042	    0.984	2.639	0.204	Kafkas göçmenleriyse günlük tartışmalardan uzak.	Kafkas göçmenleri ise günlük tartışmalardan uzak.
-
-Import wer and cer from evaluate module and calculate raw wer and cer scores for each line.
-We don't need duration and time for this task.
+sim: similarity score
+r: reference text
+p: prediction text
 """
 
 import csv
+import sys
 from pathlib import Path
-from trnorm.metrics import wer, cer, levenshtein_distance, normalized_levenshtein_distance
+from trnorm.metrics import (
+    wer,
+    cer,
+    normalized_levenshtein_distance
+)
 from trnorm import normalize
 
 log_root = r"C:\Drive\hf_cache"
-log_file = r"ysdede-commonvoice_17_tr_fixed-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
+log_file = r"ysdede-khanacademy-turkish-ysdede-whisper-khanacademy-large-v3-turbo-tr.tsv"
 input_file = Path(log_root, log_file)
 
 # Initialize counters
@@ -36,63 +32,71 @@ our_total_wer = 0
 our_total_cer = 0
 our_total_lev_dist = 0
 
-# Required fields for processing
-required_fields = ['r', 'p']  # Reference and prediction are essential
+# wer	lev_dist	sim	dur	time	r	p
+# Hardcoded field indices for reliability
+# These are the standard positions in our TSV files
+WER_IDX = 0      # WER score
+CER_IDX = -1     # CER score (not available)
+LEV_DIST_IDX = 1 # Levenshtein distance
+SIM_IDX = 2      # Similarity score
+DUR_IDX = 3      # Duration
+TIME_IDX = 4     # Time
+REF_IDX = 5      # Reference text
+PRED_IDX = 6     # Prediction text
 
 try:
     with open(input_file, "r", encoding="utf-8") as f:
-        # Read as CSV with tab delimiter
-        reader = csv.reader(f, delimiter='\t')
+        # Skip header line
+        next(f)
         
-        # Get header row
-        header = next(reader)
-        
-        # Create field index mapping
-        field_indices = {}
-        for i, field in enumerate(header):
-            field_indices[field.strip().lower()] = i
-        
-        # Check if required fields exist
-        missing_fields = [field for field in required_fields if field not in field_indices]
-        if missing_fields:
-            raise ValueError(f"Missing required fields in TSV: {missing_fields}")
-        
-        # Process each row
-        for row in reader:
+        # Process each line
+        for line_num, line in enumerate(f, 1):
             try:
-                # Skip empty rows
-                if not row:
+                # Skip empty lines
+                if not line.strip():
                     continue
                 
-                # Extract reference and prediction (required fields)
-                ref_text = row[field_indices['r']]
-                pred_text = row[field_indices['p']]
+                # Split by tab
+                row = line.strip().split('\t')
                 
-                # Extract other fields if they exist
+                # Check if we have enough fields for reference and prediction
+                if len(row) <= max(REF_IDX, PRED_IDX):
+                    print(f"Warning: Line {line_num} has insufficient fields. Skipping.")
+                    continue
+                
+                # Extract reference and prediction
+                ref_text = row[REF_IDX]
+                pred_text = row[PRED_IDX]
+                
+                # Extract other metrics if available
                 row_data = {
                     'r': ref_text,
                     'p': pred_text
                 }
                 
-                # Try to get numeric fields if they exist
-                for field in ['wer', 'cer', 'lev_dist', 'sim']:
-                    if field in field_indices and field_indices[field] < len(row):
-                        try:
-                            row_data[field] = float(row[field_indices[field]])
-                        except (ValueError, TypeError):
-                            row_data[field] = None
+                # Try to get WER if available
+                if WER_IDX >= 0 and len(row) > WER_IDX:
+                    try:
+                        row_data['wer'] = float(row[WER_IDX])
+                        total_wer += row_data['wer']
+                    except (ValueError, TypeError):
+                        row_data['wer'] = None
                 
-                # If we have the original WER, add it to the total
-                if 'wer' in row_data and row_data['wer'] is not None:
-                    total_wer += row_data['wer']
+                # Try to get Levenshtein distance if available
+                if LEV_DIST_IDX >= 0 and len(row) > LEV_DIST_IDX:
+                    try:
+                        row_data['lev_dist'] = float(row[LEV_DIST_IDX])
+                        total_lev_dist += row_data['lev_dist']
+                    except (ValueError, TypeError):
+                        row_data['lev_dist'] = None
                 
-                # If we have the original Levenshtein distance, add it to the total
-                if 'lev_dist' in row_data and row_data['lev_dist'] is not None:
-                    total_lev_dist += row_data['lev_dist']
-                
-                # If we have the original similarity score, add it to the total
-                if 'sim' in row_data and row_data['sim'] is not None:
-                    total_sim += row_data['sim']
+                # Try to get similarity score if available
+                if SIM_IDX >= 0 and len(row) > SIM_IDX:
+                    try:
+                        row_data['sim'] = float(row[SIM_IDX])
+                        total_sim += row_data['sim']
+                    except (ValueError, TypeError):
+                        row_data['sim'] = None
                 
                 count += 1
                 
@@ -118,36 +122,38 @@ try:
                     print("*" * 50)
                 
             except Exception as e:
-                print(f"Error processing row: {row[:3]}... Error: {e}")
+                print(f"Error processing line {line_num}: {e}")
                 continue
     
     # Print summary statistics
     if count > 0:
         # Original metrics (if available)
         if total_wer > 0:
-            average_wer = round((total_wer / count), 2)
-            print(f"Original Average WER: {average_wer:.2f}%")
+            average_wer = round((total_wer / count) * 100, 2)
+            print(f"Original Average WER: {average_wer}%")
         
         if total_lev_dist > 0:
             average_lev_dist = round(total_lev_dist / count, 2)
-            print(f"Original Average Levenshtein Distance: {average_lev_dist:.2f}")
+            print(f"Original Average Levenshtein Distance: {average_lev_dist}")
         
         if total_sim > 0:
             average_sim = round(total_sim / count, 2)
-            print(f"Original Average Similarity: {average_sim:.2f}")
+            print(f"Original Average Similarity: {average_sim}")
         
         print(f"Processed {count} valid rows")
-        print(50 * "=")
+        print("=" * 50)
         
         # Our metrics
-        our_avg_wer = (our_total_wer / count) * 100
-        our_avg_cer = (our_total_cer / count) * 100
-        our_avg_lev_dist = our_total_lev_dist / count
-        print(f"Our WER: {our_avg_wer:.2f}%")
-        print(f"Our CER: {our_avg_cer:.2f}%")
-        print(f"Our Levenshtein Distance: {our_avg_lev_dist:.3f}")
+        our_average_wer = round((our_total_wer / count) * 100, 2)
+        our_average_cer = round((our_total_cer / count) * 100, 2)
+        our_average_lev_dist = round(our_total_lev_dist / count, 3)
+        
+        print(f"Our WER: {our_average_wer}%")
+        print(f"Our CER: {our_average_cer}%")
+        print(f"Our Levenshtein Distance: {our_average_lev_dist}")
     else:
-        print("No valid rows were processed.")
+        print("No valid rows processed.")
 
 except Exception as e:
-    print(f"Error processing file: {e}")
+    print(f"Error: {e}")
+    sys.exit(1)

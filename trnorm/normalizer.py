@@ -29,6 +29,7 @@ DEFAULT_PIPELINE = [
     normalize_ordinals,
     convert_symbols,
     convert_numbers_to_words_wrapper,
+    # merge_suffixes,
     context_aware_merge_suffixes,  # Use context-aware version instead of regular merge_suffixes
     remove_apostrophes,
     sapkasiz,
