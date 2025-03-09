@@ -25,9 +25,11 @@ ROMAN_VALUES = {
 # - Subtractive combinations are limited to specific pairs (IV, IX, XL, XC, CD, CM)
 ROMAN_PATTERN = re.compile(r'^(?=[IVXLCDM])M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$')
 
-# Pattern to match Roman numerals followed by a period in text
+# Pattern to match Roman numerals using only I, V, X (up to 39) followed by a period in text
 # This is used to identify potential ordinal Roman numerals
-ROMAN_ORDINAL_PATTERN = re.compile(r'\b([IVXLCDM]+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
+# Limited to common use cases in Turkish text (typically up to 39/XXXIX)
+# This prevents incorrect conversion of initials like "D." in names like "Mehmet D."
+ROMAN_ORDINAL_PATTERN = re.compile(r'\b([IVX]+)\.\s+([A-Za-zÇçĞğİıÖöŞşÜü]\w*)')
 
 
 def is_roman_numeral(s):
@@ -51,7 +53,7 @@ def roman_to_arabic(roman):
         roman (str): The Roman numeral to convert
         
     Returns:
-        int: The Arabic number equivalent
+        int: The Arabic numeral equivalent
         
     Raises:
         ValueError: If the input is not a valid Roman numeral
@@ -59,19 +61,20 @@ def roman_to_arabic(roman):
     if not is_roman_numeral(roman):
         raise ValueError(f"Invalid Roman numeral: {roman}")
     
-    roman = roman.upper()
     result = 0
     prev_value = 0
     
-    # Process from right to left
-    for char in reversed(roman):
+    # Process the Roman numeral from right to left
+    for char in reversed(roman.upper()):
         value = ROMAN_VALUES[char]
-        # If the current value is less than the previous value, subtract it
+        
+        # If the current value is less than the previous value,
+        # it's a subtractive combination (like IV for 4)
         if value < prev_value:
             result -= value
-        # Otherwise, add it
         else:
             result += value
+        
         prev_value = value
     
     return result
@@ -79,17 +82,19 @@ def roman_to_arabic(roman):
 
 def find_roman_ordinals(text):
     """
-    Find all Roman ordinals in text (Roman numerals followed by a period).
+    Find all Roman ordinals in a text.
     
     Args:
-        text (str): The text to search
+        text (str): The text to search for Roman ordinals
         
     Returns:
-        list: A list of tuples containing (roman_numeral, start_position, end_position)
+        list: A list of tuples containing (roman_numeral, word, position)
     """
-    matches = []
+    results = []
     for match in ROMAN_ORDINAL_PATTERN.finditer(text):
         roman = match.group(1)
-        if is_roman_numeral(roman):
-            matches.append((roman, match.start(1), match.end(1)))
-    return matches
+        word = match.group(2)
+        position = match.start()
+        results.append((roman, word, position))
+    
+    return results
