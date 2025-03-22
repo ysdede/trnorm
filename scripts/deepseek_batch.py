@@ -9,7 +9,7 @@ import json
 import sqlite3
 import hashlib
 import transformers
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 from transformers import AutoTokenizer
 import signal
@@ -186,7 +186,7 @@ def batch_call_deepseek(prompt, batch):
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": batch_content}
                 ],
-                temperature=0.0,
+                temperature=1.0,
                 **kwargs
             )
             return response.choices[0].message.content
@@ -233,9 +233,9 @@ def create_dynamic_batches(rows, prompt, max_batch_tokens):
     current_batch = []
     current_batch_tokens = 0
     
-    # Set safety margins to ensure we stay well below the maximum token limits
-    safe_input_token_limit = min(max_batch_tokens, MAX_API_INPUT_TOKEN_LIMIT * 0.8)  # 80% of max input tokens for safety
-    safe_output_token_limit = MAX_API_OUTPUT_TOKEN_LIMIT * 0.8  # 80% of max output tokens for safety
+    # Set safety margins - only for input tokens since we want to use full max_batch_tokens for output
+    safe_input_token_limit = MAX_API_INPUT_TOKEN_LIMIT * 0.8  # 80% of max input tokens for safety
+    safe_output_token_limit = max_batch_tokens  # Use the full max_batch_tokens parameter
     
     # Count prompt tokens once instead of repeatedly
     prompt_tokens = count_tokens(prompt)
@@ -250,21 +250,29 @@ def create_dynamic_batches(rows, prompt, max_batch_tokens):
         # Calculate tokens for this row
         row_text = f"Pair {row['hash']}:\nReferans: {row['reference']}\nHipotez: {row['prediction']}\n\n"
         row_tokens = count_tokens(row_text)
-        estimated_response_tokens = int(row_tokens * 1.25)  # Estimate response tokens
         
-        # Check if adding this row would exceed our safe limits
+        # Get estimated response tokens using the same logic as estimate_batch_tokens
+        row_response_tokens = max(count_tokens(row['reference']), count_tokens(row['prediction']))
+        row_response_tokens = int(row_response_tokens * 1.2 * 1.1)  # JSON overhead * tolerance
+        
+        # Calculate new totals if we add this row
         new_batch_tokens = current_batch_tokens + row_tokens
-        new_estimated_response = int(new_batch_tokens * 1.25)
+        new_response_tokens = sum(
+            max(count_tokens(r['reference']), count_tokens(r['prediction']))
+            for r in current_batch + [row]
+        )
+        new_response_tokens = int(new_response_tokens * 1.2 * 1.1)  # JSON overhead * tolerance
         
         # Check both input and output limits
         input_limit_exceeded = (prompt_tokens + new_batch_tokens) > safe_input_token_limit
-        output_limit_exceeded = new_estimated_response > safe_output_token_limit
+        output_limit_exceeded = new_response_tokens > safe_output_token_limit
         
         # If either limit would be exceeded, start a new batch
         if (current_batch and (input_limit_exceeded or output_limit_exceeded)):
             batches.append(current_batch)
             current_batch = []
             current_batch_tokens = 0
+            new_response_tokens = row_response_tokens
         
         # Handle case where a single row exceeds limits or is very large
         if not current_batch and (row_tokens > large_row_threshold):
@@ -298,87 +306,56 @@ signal.signal(signal.SIGTERM, signal_handler)
 def process_batch(batch, json_prompt):
     """Process a single batch in a separate thread"""
     if shutdown_flag.is_set():
-        print("Shutdown requested, skipping batch")
-        return []
+        return None
     
-    # Check if any rows in the batch are already in the cache
-    batch_to_process = []
-    processed_rows = []
-    
-    for row in batch:
-        if shutdown_flag.is_set():
-            print("Shutdown requested, stopping batch processing")
-            break
+    try:
+        # Estimate tokens for this batch
+        token_info = estimate_batch_tokens(json_prompt, batch)
+        print(f"Batch size: {len(batch)}, Input tokens: {token_info['input_tokens']}, Estimated response tokens: {token_info['estimated_response_tokens']}")
         
-        # Create a new row based on the template
-        processed_row = new_row_template.copy()
+        # Check if we exceed token limits
+        if token_info['exceeds_input_limit']:
+            print(f"Warning: Batch exceeds input token limit ({token_info['input_tokens']} tokens)")
+            return None
         
-        # Copy fields from input row
-        processed_row['hash'] = row['hash']
-        processed_row['reference'] = row['reference']
-        processed_row['prediction'] = row['prediction']
+        if token_info['exceeds_output_limit']:
+            print(f"Warning: Batch may exceed output token limit ({token_info['estimated_response_tokens']} tokens)")
         
-        # Copy metrics if they exist
-        for field in ['wer', 'cer']:
-            if field in row:
-                processed_row[field] = row[field]
+        # Check cache first
+        cached_results = {}
+        for item in batch:
+            if cached := get_from_cache(item['hash'], item['reference'], item['prediction']):
+                cached_results[item['hash']] = cached
         
-        # Handle cosine similarity field which might have different names
-        if 'cosSim' in row:
-            processed_row['cosSim'] = row['cosSim']
-        elif 'cosine_similarity' in row:
-            processed_row['cosSim'] = row['cosine_similarity']
+        # If all items are cached, return early
+        if len(cached_results) == len(batch):
+            return [{**item, 'correction': cached_results[item['hash']]} for item in batch]
         
-        # Check cache with thread-safe access
-        if cached_correction := get_from_cache(row["hash"], row["reference"], row["prediction"]):
-            processed_row["corrected_reference"] = cached_correction
-        else:
-            batch_to_process.append(row)
+        # Filter out cached items from the batch
+        uncached_batch = [item for item in batch if item['hash'] not in cached_results]
+        
+        # Make API call for uncached items
+        if not (response := batch_call_deepseek(json_prompt, uncached_batch)):
+            return None
+        
+        # Parse response and update cache
+        if corrections := parse_batch_response(response, uncached_batch):
+            # Add new corrections to cache
+            for item in uncached_batch:
+                if item['hash'] in corrections:
+                    add_to_cache(item['hash'], item['reference'], item['prediction'], corrections[item['hash']])
             
-        processed_rows.append(processed_row)
-    
-    if not batch_to_process or shutdown_flag.is_set():
-        return processed_rows  # All rows were in cache or shutdown requested
-    
-    # Calculate token usage for this batch
-    token_info = estimate_batch_tokens(json_prompt, batch_to_process)
-    print(f"Batch size: {len(batch_to_process)}, Input tokens: {token_info['input_tokens']}, "
-          f"Estimated response tokens: {token_info['estimated_response_tokens']}")
-    
-    # Call the API
-    response = batch_call_deepseek(json_prompt, batch_to_process)
-    if not response:
-        print(f"Failed to get response for batch of {len(batch_to_process)} rows")
-        # Mark uncorrected rows
-        for row in processed_rows:
-            if row["corrected_reference"] is None:
-                row["corrected_reference"] = "-missing-correction-"
-        return processed_rows
-    
-    # Parse the response
-    corrections = parse_batch_response(response, batch_to_process)
-    
-    # Update processed rows with corrections and cache them
-    for row in batch_to_process:
-        hash_id = row["hash"]
-        if hash_id in corrections:
-            correction = corrections[hash_id]
+            # Combine cached and new results
+            results = []
+            for item in batch:
+                if correction := (cached_results.get(item['hash']) or corrections.get(item['hash'])):
+                    results.append({**item, 'correction': correction})
             
-            # Find the corresponding processed row
-            for processed_row in processed_rows:
-                if processed_row["hash"] == hash_id:
-                    processed_row["corrected_reference"] = correction
-                    break
-            
-            # Cache the correction with thread-safe access
-            add_to_cache(hash_id, row["reference"], row["prediction"], correction)
-    
-    # Ensure all rows have a correction (even if it's just a placeholder)
-    for row in processed_rows:
-        if row["corrected_reference"] is None:
-            row["corrected_reference"] = "-missing-correction-"
-    
-    return processed_rows
+            return results
+        
+    except Exception as e:
+        print(f"Error processing batch: {str(e)}")
+        return None
 
 new_row_template = {
     'hash': None,
@@ -444,6 +421,9 @@ def main():
     parser.add_argument('--workers', type=int, default=4, help='Number of worker threads (default: 4)')
     args = parser.parse_args()
     
+    # Limit max workers to avoid system overload
+    args.workers = min(args.workers, 16)
+    
     # Set output file name if not provided
     if not args.output:
         input_path = Path(args.input)
@@ -456,8 +436,10 @@ def main():
     
     # Initialize cache
     init_cache()
+    configure_sqlite_for_concurrency()
     
     # Read input CSV
+    print("Reading input CSV...")
     rows = []
     with open(args.input, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
@@ -466,7 +448,34 @@ def main():
             if args.limit > 0 and len(rows) >= args.limit:
                 break
     
-    print(f"Processing {len(rows)} rows")
+    total_rows = len(rows)
+    print(f"Processing {total_rows} rows")
+    
+    # Filter out cached items first
+    if not args.skip_cache:
+        print("Checking cache for existing corrections...")
+        uncached_rows = []
+        cached_rows = []
+        for i, row in enumerate(rows):
+            if i % 1000 == 0:
+                print(f"Checking cache: {i}/{total_rows} rows")
+            cached_result = get_from_cache(row['hash'], row['reference'], row['prediction'])
+            if cached_result:
+                cached_rows.append({**row, 'correction': cached_result})
+            else:
+                uncached_rows.append(row)
+        
+        print(f"Found {len(cached_rows)} cached corrections, {len(uncached_rows)} rows need processing")
+        rows = uncached_rows
+    
+    if not rows:
+        print("All rows are already in cache. Writing output file...")
+        with open(args.output, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=list(cached_rows[0].keys()))
+            writer.writeheader()
+            writer.writerows(cached_rows)
+        print("Output file written successfully")
+        return
     
     # Load base prompt and JSON format prompt
     base_prompt_path = os.path.join(os.path.dirname(__file__), "deepseek_prompt.md")
@@ -481,7 +490,8 @@ def main():
     # Combine prompts
     full_prompt = base_prompt + "\n\n" + json_format
     
-    # Create batches
+    # Create batches with progress reporting
+    print("Creating batches...")
     if args.token_based_batching:
         batches = create_dynamic_batches(rows, full_prompt, args.max_batch_tokens)
         print(f"Created {len(batches)} dynamic batches based on token count")
@@ -489,51 +499,55 @@ def main():
         batches = [rows[i:i+args.batch_size] for i in range(0, len(rows), args.batch_size)]
         print(f"Created {len(batches)} fixed-size batches")
     
-    # Process batches in parallel
+    # Process batches in parallel with reasonable thread count
     corrected_rows = []
     
     print(f"Processing batches with {args.workers} workers")
     print("Press Ctrl+C to gracefully stop processing...")
     
-    # Configure SQLite for better concurrency
-    configure_sqlite_for_concurrency()
-    
-    try:
-        # Create a thread pool and process batches in parallel
-        with ThreadPoolExecutor(max_workers=args.workers) as executor:
-            # Submit all batches to the executor
-            futures = [executor.submit(process_batch, batch, full_prompt) for batch in batches]
-            
-            # Process results as they complete
-            total_batches = len(futures)
-            
-            for i, future in enumerate(futures):
-                if shutdown_flag.is_set():
-                    # Cancel any pending futures
-                    for f in futures[i:]:
-                        f.cancel()
-                    break
-                
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        # Submit all tasks with timeout
+        future_to_batch = {
+            executor.submit(process_batch, batch, full_prompt): batch 
+            for batch in batches
+        }
+        
+        try:
+            for future in as_completed(future_to_batch, timeout=300):  # 5 minute timeout per batch
+                batch = future_to_batch[future]
                 try:
-                    batch_results = future.result()
-                    corrected_rows.extend(batch_results)
-                    print(f"Completed {i+1}/{total_batches} batches ({(i+1)/total_batches:.1%})")
+                    results = future.result(timeout=300)  # 5 minute timeout for getting results
+                    if results:
+                        corrected_rows.extend(results)
+                except TimeoutError:
+                    print(f"Timeout processing batch of {len(batch)} rows")
                 except Exception as e:
                     print(f"Error processing batch: {str(e)}")
-    except KeyboardInterrupt:
-        print("\nInterrupt received, waiting for running tasks to complete...")
-    finally:
-        # Write output CSV with whatever results we have
-        if corrected_rows:
-            print(f"\nWriting {len(corrected_rows)} rows to {args.output}")
-            with open(args.output, 'w', newline='', encoding='utf-8') as f:
-                fieldnames = list(new_row_template.keys())
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(corrected_rows)
-            print("Output file written successfully")
-        else:
-            print("\nNo results to write")
+                
+                if shutdown_flag.is_set():
+                    break
+                
+                # Report progress
+                print(f"Completed {len(corrected_rows)}/{total_rows} rows ({len(corrected_rows)/total_rows*100:.1f}%)")
+        
+        except TimeoutError:
+            print("Processing timeout reached")
+        except KeyboardInterrupt:
+            print("\nShutdown requested. Waiting for running tasks to complete...")
+            shutdown_flag.set()
+            executor.shutdown(wait=True, cancel_futures=True)
+    
+    # Combine cached and new results
+    if not args.skip_cache:
+        corrected_rows.extend(cached_rows)
+    
+    # Write output file
+    print(f"Writing {len(corrected_rows)} rows to {args.output}")
+    with open(args.output, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=list(corrected_rows[0].keys()))
+        writer.writeheader()
+        writer.writerows(corrected_rows)
+    print("Output file written successfully")
 
 if __name__ == "__main__":
     main()
