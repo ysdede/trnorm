@@ -1,11 +1,43 @@
+# examples/simulate_calculations.py
+
 """
-We have the following ASR log:
-tab seperated csv file with cols:
-wer: WER metric
-lev_dist: Levenshtein distance
-sim: similarity score
-r: reference text
-p: prediction text
+Recalculates ASR metrics from a log file using trnorm context-aware normalization.
+
+This script reads a specific ASR evaluation log file (expected to be tab-separated)
+containing pre-calculated metrics like Word Error Rate (WER), Levenshtein Distance,
+and Similarity Score, along with reference and prediction texts.
+
+The primary goal is to re-evaluate the reference and prediction pairs using the
+`trnorm` library, specifically applying its context-aware normalization (`trnorm.normalize`)
+before calculating WER, Character Error Rate (CER), and normalized Levenshtein distance
+(`trnorm.metrics.wer`, `trnorm.metrics.cer`, `trnorm.metrics.normalized_levenshtein_distance`).
+
+It compares the newly calculated WER score with the original WER score read from the
+log file for each row and prints detailed information for cases where the recalculated
+WER is higher than the original. Finally, it calculates and prints the average scores
+for both the original metrics (read from the file) and the metrics recalculated
+using `trnorm`. This helps in comparing evaluation methodologies or validating the
+`trnorm` calculations against existing logs.
+
+Input Data Requirements:
+    - File path configured via `log_root` and `log_file` variables.
+    - File format: Tab-separated values (TSV), UTF-8 encoding.
+    - Expected columns (Header is skipped, access by hardcoded index):
+        - Index 0 (`WER_IDX`): Original WER score (float).
+        - Index 2 (`LEV_DIST_IDX`): Original Levenshtein distance (float).
+        - Index 3 (`SIM_IDX`): Original Similarity score (float).
+        - Index 6 (`REF_IDX`): Reference transcription text (string).
+        - Index 7 (`PRED_IDX`): Prediction (hypothesis) text (string).
+        (Note: Other columns like duration, time might exist but are not used
+         for recalculation, and CER is not expected in the input).
+
+Output:
+    - Prints to standard output.
+    - For rows where recalculated WER > original WER: Prints comparison details
+      (Original/Recalculated scores, Raw Texts, Normalized Texts).
+    - At the end: Prints summary statistics:
+        - Average Original WER, Levenshtein Distance, Similarity (if found).
+        - Average Recalculated WER, CER, Levenshtein Distance using `trnorm`.
 """
 
 import csv
@@ -19,7 +51,7 @@ from trnorm.metrics import (
 from trnorm import normalize
 
 log_root = r"C:\Drive\hf_cache"
-log_file = r"ysdede-khanacademy-turkish-ysdede-whisper-khanacademy-large-v3-turbo-tr.tsv"
+log_file = r"ymoslem-MediaSpeech-deepdml-faster-whisper-large-v3-turbo-ct2.tsv"
 input_file = Path(log_root, log_file)
 
 # Initialize counters
@@ -36,13 +68,13 @@ our_total_lev_dist = 0
 # Hardcoded field indices for reliability
 # These are the standard positions in our TSV files
 WER_IDX = 0      # WER score
-CER_IDX = -1     # CER score (not available)
-LEV_DIST_IDX = 1 # Levenshtein distance
-SIM_IDX = 2      # Similarity score
-DUR_IDX = 3      # Duration
-TIME_IDX = 4     # Time
-REF_IDX = 5      # Reference text
-PRED_IDX = 6     # Prediction text
+CER_IDX = 1     # CER score (not available)
+LEV_DIST_IDX = 2 # Levenshtein distance
+SIM_IDX = 3      # Similarity score
+DUR_IDX = 4      # Duration
+TIME_IDX = 5     # Time
+REF_IDX = 6      # Reference text
+PRED_IDX = 7     # Prediction text
 
 try:
     with open(input_file, "r", encoding="utf-8") as f:
@@ -129,7 +161,7 @@ try:
     if count > 0:
         # Original metrics (if available)
         if total_wer > 0:
-            average_wer = round((total_wer / count) * 100, 2)
+            average_wer = round((total_wer / count), 2)
             print(f"Original Average WER: {average_wer}%")
         
         if total_lev_dist > 0:

@@ -1,0 +1,6 @@
+hash,wer,cer,cosSim,reference,corrected_reference,prediction
+1234abcd,0.25,0.1,0.95,bu bir test cümlesi,bu bir test cümlesi,bu bir test cumlesi
+5678efgh,0.2,0.05,0.98,merhaba dünya,merhaba dünya,merhaba dunya
+9012ijkl,0.2,0.1,0.97,nasılsın bugün,nasılsın bugün,nasilsin bugun
+3456mnop,0.2,0.1,0.96,güzel bir gün,güzel bir gün,guzel bir gun
+7890qrst,0.2,0.1,0.95,türkçe karakterler,türkçe karakterler,turkce karakterler
