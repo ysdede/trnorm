@@ -26,7 +26,7 @@ This script (`scripts/deepseek_batch_v2.py`) processes CSV files containing Auto
 - **Token Management**: Uses a Hugging Face tokenizer (`scripts/deepseek_v3_tokenizer/`) to count input tokens against API limits (`MAX_API_INPUT_TOKEN_LIMIT`). Estimates output tokens to potentially set `max_tokens` API parameter.
 - **Error Handling & Retries**: Implements retries with exponential backoff for transient API errors. Handles JSON parsing errors and mismatches between batch size and response length gracefully (skips affected batch).
 - **Concurrency Configuration**: Configures SQLite for concurrent access using Write-Ahead Logging (WAL), increased cache size, and busy timeout.
-- **Graceful Shutdown**: Responds to `Ctrl+C` (SIGINT) and `SIGTERM` signals to stop submitting new tasks and attempt to wait for running threads.
+- **Graceful Shutdown**: Responds to `Ctrl+C` (SIGINT) and `SIGTERM` signals to stop submitting new tasks. The script then waits for running threads to complete, with a maximum wait time of 30 seconds. If the threads do not finish within the timeout, the script logs a warning and exits without forcibly interrupting the threads.
 - **Progress Reporting**: Displays the percentage of rows completed during processing.
 
 ## Workflow
