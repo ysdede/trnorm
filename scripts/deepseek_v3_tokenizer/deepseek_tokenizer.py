@@ -2,7 +2,8 @@
 # python3 deepseek_tokenizer.py
 import transformers
 
-chat_tokenizer_dir = "./"
+import os
+chat_tokenizer_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
 
 tokenizer = transformers.AutoTokenizer.from_pretrained( 
         chat_tokenizer_dir, trust_remote_code=True
