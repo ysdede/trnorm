@@ -32,3 +32,15 @@ __pycache__
 /docs/site/
 /site/
 
+.env
+.env.example
+
+# deepseek cache
+deepseek_cache.db
+deepseek_cache.db-wal
+deepseek_cache.db-shm
+deepseek_cache_v2.db
+deepseek_cache_v2.db-wal
+deepseek_cache_v2.db-shm
+
+scripts/deepseek_logs/*
