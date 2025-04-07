@@ -1,3 +1,80 @@
+# scripts/deepseek_batch.py
+
+"""
+Processes ASR reference/prediction pairs using the DeepSeek API, with batching and caching (Version 1).
+
+This script reads an input CSV file containing Automatic Speech Recognition (ASR)
+results ('reference', 'prediction', 'hash' columns). It uses the DeepSeek Chat API
+('deepseek-chat' model) to generate corrected versions of the 'reference' text,
+leveraging the 'prediction' text for context. The specific correction task is guided
+by prompts loaded from 'scripts/deepseek_prompt.md' and potentially influenced by
+JSON formatting hints from 'scripts/deepseek_json_prompt.md'.
+
+Key features of this version include:
+1.  **Batch API Calls:** Submits multiple reference/prediction pairs per API request.
+    Includes formatting like "Pair <hash>:\nReferans: ...\nHipotez: ..." in the prompt.
+2.  **Flexible Batching:** Offers two modes via command-line arguments:
+    a) Fixed-size batches (`--batch_size`).
+    b) Dynamic, token-based batches (`--token_based_batching`) attempting to maximize
+       items per batch without exceeding `--max_batch_tokens`.
+3.  **SQLite Caching:** Uses a local SQLite database ('deepseek_cache.db') to store
+    results keyed by the input 'hash', avoiding redundant API calls.
+4.  **Concurrency:** Employs a ThreadPoolExecutor (`--workers`) to process multiple
+    batches in parallel.
+5.  **Token Estimation:** Attempts to estimate input and output tokens to manage API limits.
+6.  **Response Parsing:** Attempts to parse the API response, primarily trying to decode
+    it as JSON (list or dictionary), but includes fallback logic like removing markdown
+    code blocks and potentially matching "Pair <hash>:" lines.
+7.  **Retries:** Implements basic retries with exponential backoff for API call failures.
+8.  **Single Correction Function:** Includes a `single_correction` function for processing
+    individual pairs outside the batch workflow.
+
+The script outputs a new CSV file containing the original data plus the LLM-generated
+'correction' (or 'corrected_reference') for each row.
+
+Input Data Requirements:
+    - Command-line arguments: --input (required), --output (optional), batching args,
+      --limit (optional), --skip_cache (optional), --workers.
+    - Input CSV format: Comma-separated, UTF-8 encoding.
+    - Required Input Columns: 'reference', 'prediction', 'hash'.
+    - File System:
+        - Prompt file: 'scripts/deepseek_prompt.md'.
+        - JSON format hint file: 'scripts/deepseek_json_prompt.md'.
+        - Tokenizer files: Must exist in 'scripts/deepseek_v3_tokenizer/'.
+    - Environment: A '.env' file with 'deepseek_api_key'.
+
+Output Data:
+    - Primary Output: A new CSV file (e.g., 'input_file_corrected.csv') containing
+      original columns plus the 'correction'/'corrected_reference' column.
+    - Cache Database: 'scripts/deepseek_cache.db' is created/updated.
+
+Differences from Version 2 (deepseek_batch_v2.py):
+
+Features Missing in v1 (Present in v2):
+    - **Explicit JSON Request:** v1 doesn't use the `response_format={"type": "json_object"}`
+      API parameter; it relies on the prompt to encourage JSON output.
+    - **Strict JSON Parsing & Validation:** v2 strictly expects JSON and validates the
+      `corrections` list length against the batch size. v1's parsing is less strict
+      and more heuristic.
+    - **Robust Logging:** v2 has dedicated logging of raw prompts/responses to files
+      in `deepseek_logs/`. v1 lacks this structured file logging.
+    - **Advanced SQLite Config:** v2 includes configuration for `busy_timeout`. v1 configures
+      WAL, sync mode, and cache size but lacks the busy timeout.
+    - **Refined Pre-call Checks:** v2 performs more explicit checks against input token
+      limits *before* calling the API.
+    - **Dedicated Log Saving Function:** v2 has a helper function for saving logs.
+
+Features Present in v1 (Missing in v2):
+    - **Dynamic Token-Based Batching:** v1 offers an alternative batching strategy based
+      on token count (`--token_based_batching`, `create_dynamic_batches`). v2 uses
+      fixed-size batches only.
+    - **Single Correction Function:** v1 provides `single_correction` for non-batch use.
+      v2 is purely batch-oriented.
+    - **Heuristic Parsing Elements:** v1's parser includes logic for markdown removal
+      and potentially non-JSON structures, suggesting it might handle less structured
+      API outputs compared to v2's strict JSON expectation.
+"""
+
 import csv
 import argparse
 import time
@@ -13,6 +90,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
 from transformers import AutoTokenizer
 import signal
+import re
 
 # Load environment variables from .env file
 load_dotenv()
@@ -143,7 +221,7 @@ def call_deepseek(prompt, reference, prediction):
             {"role": "system", "content": prompt},
             {"role": "user", "content": f"Referans: {reference}\nHipotez: {prediction}"}
         ],
-        temperature=0.7,
+        temperature=1.0,
         **({"max_tokens": MAX_API_OUTPUT_TOKEN_LIMIT} if len(reference) > 1000 else {})
     )
     return response.choices[0].message.content
@@ -217,12 +295,44 @@ def parse_batch_response(response_text, batch):
         corrections = json.loads(response_text)
         print("Successfully parsed response as JSON")
         
+        # Create a mapping of hash to item for validation
+        batch_map = {item['hash']: item for item in batch}
+        result = {}
+        
         if isinstance(corrections, list):
-            # Map corrections to hashes
-            return {row['hash']: corrections[i] for i, row in enumerate(batch) if i < len(corrections)}
+            # Extract hash from the response text for each correction
+            response_lines = response_text.split('\n')
+            current_hash = None
+            
+            for i, line in enumerate(response_lines):
+                # Try to extract hash from "Pair <hash>:" format
+                if (hash_match := re.match(r'Pair\s+([^:]+):', line.strip())):
+                    current_hash = hash_match.group(1)
+                    if current_hash in batch_map and i < len(corrections):
+                        result[current_hash] = corrections[i]
+                    elif i < len(corrections):
+                        print(f"Warning: Found correction for unknown hash {current_hash}")
+            
+            # Verify we found all hashes
+            if missing := [item['hash'] for item in batch if item['hash'] not in result]:
+                print(f"Warning: Missing corrections for hashes: {missing}")
+            
+            return result
+            
         elif isinstance(corrections, dict):
-            # If it's a dictionary with hash keys, use it directly
-            return corrections
+            # If it's a dictionary, verify all hashes exist in our batch
+            for hash_id, correction in corrections.items():
+                if hash_id in batch_map:
+                    result[hash_id] = correction
+                else:
+                    print(f"Warning: Found correction for unknown hash {hash_id}")
+            
+            # Verify we found all hashes
+            if missing := [item['hash'] for item in batch if item['hash'] not in result]:
+                print(f"Warning: Missing corrections for hashes: {missing}")
+            
+            return result
+            
     except json.JSONDecodeError:
         print("Response is not valid JSON")
         return {}
@@ -513,10 +623,10 @@ def main():
         }
         
         try:
-            for future in as_completed(future_to_batch, timeout=300):  # 5 minute timeout per batch
+            for future in as_completed(future_to_batch, timeout=600):  # 5 minute timeout per batch
                 batch = future_to_batch[future]
                 try:
-                    results = future.result(timeout=300)  # 5 minute timeout for getting results
+                    results = future.result(timeout=600)  # 5 minute timeout for getting results
                     if results:
                         corrected_rows.extend(results)
                 except TimeoutError:

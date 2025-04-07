@@ -1,64 +1,66 @@
-Görev Tanımı:
-ASR (Otomatik Konuşma Tanıma) sisteminden elde edilen hipotez cümleyi ve referans cümleyi kullanarak aşağıdaki adımları uygula:
+# ASR Metin Düzeltme ve Hizalama Görevi
 
-Hizalama (Alignment) Düzeltmeleri:
+ASR (Otomatik Konuşma Tanıma) sisteminden elde ettiğim hipotez cümleyi ve referans cümleyi vereceğim. Referans cümlede etiketleme veya hizalama (alignment) hatalarından dolayı başta veya sonda eksik/fazla kelimeler olabilir. Ayrıca, referans cümlede imla, yazım, Türkçe dil bilgisi veya noktalama hataları bulunabilir.
 
-Hipotezdeki kelimeleri referans cümleyle karşılaştır.
+## Görevin:
 
-Eksik veya yanlış hizalanmış kelimeleri hipotezden referans cümleye ekle/düzelt.
+1. **Hizalama (Alignment) İçin Hipotezi Kullan:**
+   - Hipotezdeki kelimeleri referans cümleyle karşılaştırarak, eksik veya yanlış hizalanmış kelimeleri düzelt.
+   - Hipotezdeki kelimeler, referans cümlede alignment hatası nedeniyle eksik veya yanlış yerleştirilmiş olabilir. Bu durumda, hipotezdeki doğru kelimeleri referans cümleye ekle veya düzelt.
+   - Hipotezdeki bir ifade referans cümlede eksikse, ancak ses etiketinde olması gereken bir ifadeyse, bu ifadeyi referans cümleye dikkatlice ekle.
+   - Hipotezdeki ekstra kelimeler veya ipuçları, referans cümlede eksik olan bilgileri tamamlamak için kullanılabilir.
 
-ASR Hatalarını Dikkate Al: Hipotezdeki hatalı kelimeleri referans cümleye ekleme.
+2. **Dikkat Edilmesi Gerekenler:**
+   - Hipotez cümlede ASR'den kaynaklanan WER/CER hataları olabileceğini unutma.
+   - Hipoteze aşırı güvenme ve referans cümlede gereksiz yoğun değişiklikler yapma.
+   - Hipotezdeki hatalı kelimeleri referans cümleye ekleme.
+   - Cümlenin anlam bütünlüğünü koru. Alignment düzeltmeleri yaparken, cümlenin anlamını bozma.
 
-Anlam Bütünlüğünü Koru: Cümlenin akışını ve anlamını bozma.
+3. **Dil ve Yazım Düzeltmeleri:**
+   - Referans cümledeki imla, yazım, noktalama ve Türkçe dil bilgisi hatalarını düzelt.
+   - Türkçe yerelleşmeyi koru, gerekirse düzelt. Türkçe'de ondalık basamakları virgül ile ayrılır (3,14 gibi).
+   - Nokta ile ayrılmış binler basamaklarını düzelt (1.000.000 → 1000000 gibi).
+   - Yüzde işareti sayıdan önce gelir (%3 gibi).
+   - Para birimleri sayıdan sonra gelir (100 TL, 50 $ gibi).
+   - Şapkalı harfleri düzleştirme, koru (mali gelir anlamındaki "kâr" gibi).
 
-Dil ve Yazım Düzeltmeleri:
+4. **Stopword'leri Koru:**
+   - "Yani", "hani", "ya", "tabii" vb. kelimeleri silme.
+   - Bu kelimeler cümlenin akışını ve anlamını korumak için önemlidir.
 
-Referans cümledeki imla, yazım, noktalama ve Türkçe dil bilgisi hatalarını düzelt.
+5. **Tamamen Hatalı Etiketleri Tespit Et:**
+   - Referans ve hipotez arasında hiçbir anlamsal/kelime benzerliği yoksa, "Hatalı etiketleme" olarak işaretle.
 
-Stopword'leri Silme: "Yani", "hani", "tabii" gibi kelimeleri koru.
+## Örnekler:
 
-Tamamen Hatalı Etiketleri Tespit Et:
+**Örnek 1:**
+Referans: "İşte bir kolejler var, Katolik. Bir de belediye okulları var. Burada seçmeli din dersleri var."
+Hipotez: "İşte bir kolejler var, katolik. Bir de normal belediye, community school dediğimiz belediye okulları var. Burada seçmeli din dersleri var."
 
-Referans ve hipotez arasında hiçbir anlamsal/kelime benzerliği yoksa, "Hatalı etiketleme" olarak işaretle.
+Çıkış:
+"İşte bir kolejler var, Katolik. Bir de normal belediye, community school dediğimiz belediye okulları var. Burada seçmeli din dersleri var."
 
-Adım Adım Talimatlar:
-A. Hizalama (Alignment) İşlemleri:
-Eksik/Yanlış Kelimeleri Tamamla:
+**Örnek 2:**
+Referans: "Hollanda, yüz ölçümü olarak Konya kadar bir yer."
+Hipotez: "Hollanda %3 olarak Konya kadar bir yer. Buna rağmen..."
 
-Örn: Hipotezde "community school" varsa, referansa ekle.
+Çıkış:
+"Hollanda, yüz ölçümü olarak Konya kadar bir yer. Buna rağmen..."
 
-ASR Hatalarını Göz Ardı Et:
+**Örnek 3:**
+Referans: "Töre, namus cinayetlerinin."
+Hipotez: "Namus cinayetlerinin."
 
-Örn: Hipotezde "%3" yazıyorsa, referanstaki "yüz ölçümü" ifadesini koru.
+Çıkış:
+"Namus cinayetlerinin."
 
-Ses Metin Uyumsuzluğunu Çöz:
-
-Örn: Hipotezde "Buna rağmen" varsa ve referansta eksikse, ekle.
-
-B. Hatalı Etiketleme Tespiti:
-Ölçüt: Referans ve hipotez arasında hiçbir kelime veya anlam örtüşmesi yoksa (örnek: "gösteriler" vs "ihanet belgesi"), düzeltme yapma.
-
-Örnek Senaryolar:
-Senaryo 1: Alignment Düzeltme
-Referans: "İşte bir kolejler var, Katolik. Bir de belediye okulları var."
-
-Hipotez: "İşte bir kolejler var, katolik. Bir de normal belediye, community school dediğimiz belediye okulları var."
-
-Çıktı:
-"İşte bir kolejler var, Katolik. Bir de normal belediye, community school dediğimiz belediye okulları var."
-
-Açıklama:
-"community school" hipotezden eklendi; "katolik" düzeltildi.
-
-Senaryo 2: Hatalı Etiketleme
+**Örnek 4: Hatalı Etiketleme**
 Referans: "Birçok şehirde gösteriler düzenlendi."
-
 Hipotez: "İhanet belgesi olduğunu söyleyerek Libra yönetimini eleştirmek."
 
-Çıktı:
-"Hatalı etiketleme: Referans ve hipotez arasında hiçbir benzerlik yok."
+Çıkış:
+"Hatalı etiketleme"
 
-Sonuç Formatı:
+## Sonuç Formatı:
 Düzeltilmiş referans cümlesini ver. Sadece düzeltilmiş referans cümlesini döndür. Açıklama yapma!
-
-Referans ve Hipotez arasında fark yoksa referans cümlesindeki imla, yazım, noktalama ve Türkçe dil bilgisi hatalarını düzelt. Çıktı yine girdi ile aynı "-1111-" kodunu döndür.
+Referans ve Hipotez arasında fark yok ise: referans cümlesindeki imla, yazım, noktalama ve Türkçe dil bilgisi hatalarını düzelt.

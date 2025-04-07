@@ -1,0 +1,6 @@
+hash,wer,cer,cosSim,reference,prediction
+test1,0.25,0.1,0.95,bu bir yeni test cümlesi,bu bir yeni test cumlesi
+test2,0.2,0.05,0.98,merhaba yeni dünya,merhaba yeni dunya
+test3,0.2,0.1,0.97,nasılsın bugün arkadaşım,nasilsin bugun arkadasim
+test4,0.2,0.1,0.96,güzel bir gün değil mi,guzel bir gun degil mi
+test5,0.2,0.1,0.95,türkçe karakterler önemlidir,turkce karakterler onemlidir
